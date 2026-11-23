@@ -26,7 +26,7 @@
           }
           <span class="dyn-spacer"></span>
           @if (last) {
-            <button mat-flat-button type="submit">
+            <button mat-flat-button type="submit" [disabled]="busy()">
               <mat-icon aria-hidden="true">send</mat-icon>
               Gönder
             </button>

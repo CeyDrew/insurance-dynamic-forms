@@ -24,7 +24,7 @@ import { debounceTime } from 'rxjs';
 import { FieldComponent } from '../fields/field';
 import { FormDefinition } from '../model';
 import { FormValues } from './field-value';
-import { RenderedForm, StepState } from './rendered-form';
+import { FieldError, RenderedForm, StepState } from './rendered-form';
 import { TrDateAdapter } from './tr-date-adapter';
 
 /** What the user has entered so far; pass it back as `draft` to resume. */
@@ -65,6 +65,8 @@ export class FormRendererComponent implements OnInit, OnDestroy {
   readonly draft = input<FormDraft | null>(null);
   /** Today as `YYYY-MM-DD`; for tests. */
   readonly today = input<(() => string) | undefined>(undefined);
+  /** True while the host is sending a submission: the submit button is disabled. */
+  readonly busy = input(false);
 
   readonly submitted = output<FormSubmission>();
   readonly draftChange = output<FormDraft>();
@@ -114,6 +116,7 @@ export class FormRendererComponent implements OnInit, OnDestroy {
   }
 
   protected submit(): void {
+    if (this.busy()) return;
     this.form.root.markAllAsTouched();
     if (this.form.root.invalid) {
       const firstInvalid = this.form.visibleSteps().findIndex((s) => s.group.invalid);
@@ -125,6 +128,23 @@ export class FormRendererComponent implements OnInit, OnDestroy {
     }
     const definition = this.definition();
     this.submitted.emit({ formId: definition.id, version: definition.version, values: this.form.value() });
+  }
+
+  /**
+   * Shows errors the server returned for a submission on their fields and moves to the first
+   * one's step. Returns the errors that belong to no field, for the host to show elsewhere.
+   */
+  showServerErrors(errors: readonly FieldError[]): FieldError[] {
+    const unmatched = this.form.applyServerErrors(errors);
+    const steps = errors.map((e) => this.form.stepIndexOf(e.field)).filter((i) => i >= 0);
+    if (steps.length > 0) {
+      const target = Math.min(...steps);
+      const stepper = this.stepper();
+      stepper.steps.toArray().slice(0, target).forEach((step) => (step.interacted = true));
+      stepper.selectedIndex = target;
+      this.focusFirstInvalid();
+    }
+    return unmatched;
   }
 
   protected emitDraft(): void {
