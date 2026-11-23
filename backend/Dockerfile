@@ -1,15 +1,15 @@
 # Build context is the repository root: the build copies ../examples into the jar.
-FROM eclipse-temurin:21-jdk AS build
+# The official Maven image is used instead of ./mvnw so the build does not have to download Maven itself.
+FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /src/backend
 
 # Dependencies first, so source edits do not invalidate the Maven cache layer.
-COPY backend/.mvn .mvn
-COPY backend/mvnw backend/pom.xml ./
-RUN sed -i 's/\r$//' mvnw && chmod +x mvnw && ./mvnw -q -B dependency:go-offline
+COPY backend/pom.xml ./
+RUN mvn -q -B dependency:go-offline
 
 COPY examples /src/examples
 COPY backend/src src
-RUN ./mvnw -q -B -DskipTests package
+RUN mvn -q -B -DskipTests package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
