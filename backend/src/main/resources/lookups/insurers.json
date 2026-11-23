@@ -1,0 +1,17 @@
+[
+  { "value": "allianz", "label": "Allianz Sigorta" },
+  { "value": "anadolu", "label": "Anadolu Sigorta" },
+  { "value": "ankara", "label": "Ankara Sigorta" },
+  { "value": "axa", "label": "AXA Sigorta" },
+  { "value": "bereket", "label": "Bereket Sigorta" },
+  { "value": "doga", "label": "Doğa Sigorta" },
+  { "value": "hdi", "label": "HDI Sigorta" },
+  { "value": "mapfre", "label": "Mapfre Sigorta" },
+  { "value": "neova", "label": "Neova Sigorta" },
+  { "value": "quick", "label": "Quick Sigorta" },
+  { "value": "ray", "label": "Ray Sigorta" },
+  { "value": "sompo", "label": "Sompo Sigorta" },
+  { "value": "turkiye", "label": "Türkiye Sigorta" },
+  { "value": "unico", "label": "Unico Sigorta" },
+  { "value": "other", "label": "Diğer" }
+]

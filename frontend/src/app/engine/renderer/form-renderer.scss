@@ -1,0 +1,159 @@
+// Unencapsulated: styles the renderer and the field components inside it. Everything is under .dyn-form.
+.dyn-form {
+  display: block;
+  max-width: 880px;
+
+  .dyn-form-header {
+    margin-bottom: 8px;
+
+    h2 {
+      margin: 0 0 4px;
+      font: var(--mat-sys-headline-small);
+    }
+
+    p {
+      margin: 0;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  .mat-stepper-horizontal {
+    background: transparent;
+  }
+
+  .dyn-step-description {
+    margin: 0 0 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dyn-step-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dyn-field {
+    display: block;
+  }
+
+  .dyn-form-field {
+    width: 100%;
+  }
+
+  .dyn-narrow {
+    max-width: 320px;
+  }
+
+  .dyn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 4px 0 20px;
+  }
+
+  .dyn-group-label {
+    font: var(--mat-sys-body-large);
+    color: var(--mat-sys-on-surface);
+  }
+
+  .dyn-required {
+    margin-left: 2px;
+  }
+
+  .dyn-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+  }
+
+  .dyn-hint {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dyn-error,
+  .dyn-hint-error {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-error);
+  }
+
+  .dyn-group-invalid .dyn-group-label {
+    color: var(--mat-sys-error);
+  }
+
+  .dyn-computed {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--mat-sys-surface-container);
+  }
+
+  .dyn-computed-label {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dyn-computed-value {
+    font: var(--mat-sys-title-medium);
+  }
+
+  .dyn-info {
+    display: flex;
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+
+    p {
+      margin: 4px 0 0;
+    }
+  }
+
+  .dyn-repeater {
+    margin: 0 0 20px;
+    padding: 12px 16px 16px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 12px;
+
+    legend {
+      padding: 0 4px;
+    }
+  }
+
+  .dyn-row {
+    margin: 12px 0;
+    padding: 8px 16px 0;
+    border-radius: 8px;
+    background: var(--mat-sys-surface-container-low);
+  }
+
+  .dyn-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h3 {
+      margin: 0;
+      font: var(--mat-sys-title-small);
+    }
+  }
+
+  .dyn-empty {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dyn-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .dyn-spacer {
+    flex: 1;
+  }
+}

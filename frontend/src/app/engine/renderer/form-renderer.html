@@ -1,0 +1,43 @@
+<form class="dyn-form" [formGroup]="form.root" (ngSubmit)="submit()" novalidate>
+  <header class="dyn-form-header">
+    <h2>{{ definition().title }}</h2>
+    @if (definition().description) {
+      <p>{{ definition().description }}</p>
+    }
+  </header>
+
+  <mat-stepper linear labelPosition="bottom" (selectionChange)="emitDraft()">
+    @for (step of form.visibleSteps(); track step.step.id; let first = $first, last = $last) {
+      <mat-step [stepControl]="step.group" [label]="step.step.title">
+        @if (step.step.description) {
+          <p class="dyn-step-description">{{ step.step.description }}</p>
+        }
+        <div class="dyn-step-fields">
+          @for (field of step.fields; track field.field.id) {
+            <dyn-field [state]="field" />
+          }
+        </div>
+        <div class="dyn-actions">
+          @if (!first) {
+            <button mat-button type="button" matStepperPrevious>
+              <mat-icon aria-hidden="true">arrow_back</mat-icon>
+              Geri
+            </button>
+          }
+          <span class="dyn-spacer"></span>
+          @if (last) {
+            <button mat-flat-button type="submit">
+              <mat-icon aria-hidden="true">send</mat-icon>
+              Gönder
+            </button>
+          } @else {
+            <button mat-flat-button type="button" (click)="next(step)">
+              İleri
+              <mat-icon iconPositionEnd aria-hidden="true">arrow_forward</mat-icon>
+            </button>
+          }
+        </div>
+      </mat-step>
+    }
+  </mat-stepper>
+</form>

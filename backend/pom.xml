@@ -103,6 +103,16 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<!-- Product forms shared with the frontend tests; served by ExampleDefinitionController. -->
+			<resource>
+				<directory>../examples</directory>
+				<targetPath>examples</targetPath>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
