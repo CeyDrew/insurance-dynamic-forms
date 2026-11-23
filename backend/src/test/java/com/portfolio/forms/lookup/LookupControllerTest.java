@@ -19,6 +19,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(LookupController.class)
+@org.springframework.context.annotation.Import(LookupService.class)
 class LookupControllerTest {
 
 	@Autowired
