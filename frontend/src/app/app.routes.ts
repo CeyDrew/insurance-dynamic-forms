@@ -13,6 +13,11 @@ export const routes: Routes = [
     title: 'Form Doldur',
   },
   {
+    path: 'fill/:id',
+    loadComponent: () => import('./fill/fill-form-page').then((m) => m.FillFormPage),
+    title: 'Form Doldur',
+  },
+  {
     path: 'submissions',
     loadComponent: () => import('./submissions/submissions-page').then((m) => m.SubmissionsPage),
     title: 'Gelen Cevaplar',
