@@ -15,7 +15,7 @@ sorgulanabilmesi gerekir ("LPG'li araçlar", "25 yaş altı sürücüler").
 |---|---|
 | Her alan için kolon (form başına tablo) | Yeni soru = migration = deploy. Ürünün varlık sebebiyle çelişir. |
 | EAV (`submission_id, field_id, value`) | Esnek ama repeater satırları, tipler ve "bir cevabın tamamını oku" sorguları zahmetli; satır sayısı hızla büyür. |
-| Ayrı doküman veritabanı | Ana proje ve hedef ilan Oracle; ikinci bir veritabanı işletme yükü getirir. |
+| Ayrı doküman veritabanı | Ana proje de Oracle kullanıyor; ikinci bir veritabanı işletme yükü getirir. |
 | **Oracle'da JSON kolon** | Seçildi. |
 
 ## Karar
@@ -43,7 +43,7 @@ fonksiyonları çalışır ve eski Oracle sürümlerine taşınabilir.
 
 - (+) Yeni soru için şema değişikliği yok; tanım yayınlandığı anda doldurulabilir.
 - (+) Cevap, doldurulduğu versiyonun yapısını olduğu gibi korur.
-- (+) İlanın istediği Oracle/SQL yetkinliği doğrudan görünür.
+- (+) Oracle/SQL yetkinliği (SQL/JSON fonksiyonları) doğrudan görünür.
 - (−) Alan bazlı sık sorgular için fonksiyon tabanlı indeks veya `JSON_TABLE` materialized view gerekir (şu an demo
   ölçeğinde gerekmedi).
 - (−) Referans bütünlüğü (ör. seçilen değerin lookup'ta olması) veritabanında değil, uygulamada sağlanır.

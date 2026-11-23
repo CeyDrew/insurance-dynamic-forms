@@ -107,11 +107,9 @@ flowchart LR
 - [0003 — Yayınlanmış versiyon değiştirilemez](docs/adr/0003-immutable-published-versions.md)
 - [0004 — Doğrulama iki tarafta, sunucu belirleyici](docs/adr/0004-validate-on-both-sides.md)
 
-## İlanla eşleşme
+## Teknik öne çıkanlar
 
-Hedef: **Mid-Level Full Stack Developer** (sigorta sektörü; Java, Spring Boot, Angular, PL/SQL).
-
-| İlandaki beklenti | Bu projede nerede |
+| Konu | Bu projede nerede |
 |---|---|
 | Angular (ileri seviye) | Standalone + **signals** + **typed reactive forms** + `OnPush`; tanımdan form üreten renderer ([`engine/renderer`](frontend/src/app/engine/renderer)), sinyal tabanlı bağımlılık grafiği ([`form-rules.ts`](frontend/src/app/engine/rules/form-rules.ts)), kendi `ControlValueAccessor`'ı (TL tutar girişi), CDK drag-drop tasarımcı, undo/redo |
 | Java, Spring Boot | Spring Boot 4 / Java 21: REST, JPA, Flyway, RFC 9457 problem details, springdoc OpenAPI; recursive descent parser ve sealed interface + pattern matching ile AST ([`expression`](backend/src/main/java/com/portfolio/forms/expression)) |

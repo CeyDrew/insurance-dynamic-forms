@@ -2,7 +2,7 @@
 
 ## Amaç
 
-İş başvurusu için destekleyici portföy projesi. Hedef ilan: **Mid-Level Full Stack Developer (sigorta sektörü; Java, Spring Boot, Angular, PL/SQL)**.
+Sigorta sektörüne yönelik full stack portföy projesi (Java, Spring Boot, Angular, Oracle).
 Ana portföy projesi `D:\projeler\insurance-policy-management`. Bu proje onu tamamlar ve **Angular yetkinliğini CRUD ekranlarının ötesinde** gösterir.
 
 Problem: sigortada her ürünün kendi risk soru seti var (kasko, konut, sağlık, seyahat...). Sigorta şirketleri bu formları her seferinde kodlamak yerine **JSON tanımından üretir**. Ürün ekibi yeni soru ekler, deploy gerekmez.
@@ -11,7 +11,7 @@ Problem: sigortada her ürünün kendi risk soru seti var (kasko, konut, sağlı
 
 - **Sadece lokal çalışır.** Deploy yok.
 - Her faz sonunda GitHub'a push.
-- Form tanımı ve cevaplar Oracle'da saklanır (ilanla uyum için), backend Spring Boot.
+- Form tanımı ve cevaplar Oracle'da saklanır, backend Spring Boot.
 
 ## Teknoloji yığını
 
@@ -135,7 +135,7 @@ Her fazın sonunda **dur, kullanıcıya özet ver, onay almadan sonraki faza ge�
 - Playwright e2e: tasarla → yayınla → doldur → cevabı listede gör
 - GitHub Actions: build + test (deploy yok)
 - Tam `docker compose up`
-- README: GIF/ekran görüntüleri, mimari diyagram, ilanla eşleşme tablosu, "ana proje ile ilişkisi" bölümü
+- README: GIF/ekran görüntüleri, mimari diyagram, teknik öne çıkanlar tablosu, "ana proje ile ilişkisi" bölümü
 - `docs/adr/`: neden kendi ifade parser'ı, neden JSON kolonda saklama, neden versiyonlama
 - **Bitti kriteri:** README'yi takip eden biri 10 dakikada ayağa kaldırıp demo akışını yürütebiliyor.
 
