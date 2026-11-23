@@ -5,6 +5,8 @@ import { fromIsoDate, isEmptyValue } from './field-value';
 
 /** Error key of the dynamic required check. Other keys are the definition's validator types. */
 export const REQUIRED = 'required';
+/** Error key for a message the server returned; its value is the message itself. */
+export const SERVER = 'server';
 
 /**
  * Validators for one field. `isRequired` is read on every run, so the caller re-runs
@@ -106,6 +108,9 @@ export function errorMessage(field: FieldDefinition, control: AbstractControl): 
   const errors = control.errors;
   if (!errors) {
     return null;
+  }
+  if (typeof errors[SERVER] === 'string') {
+    return errors[SERVER];
   }
   const key = Object.keys(errors)[0] as ValidatorType | typeof REQUIRED;
   const custom = ('validators' in field ? (field.validators as ValidatorDefinition[] | undefined) : undefined)?.find(

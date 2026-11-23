@@ -13,7 +13,14 @@ import { Subscription } from 'rxjs';
 import { FieldDefinition, FormDefinition, RepeaterField, StepDefinition } from '../model';
 import { FieldRules, FormRules, isoToday, Value } from '../rules';
 import { ControlValue, fromModel, FormValues, toModel } from './field-value';
-import { fieldValidators } from './validators';
+import { fieldValidators, SERVER } from './validators';
+
+/** A field-level problem reported by the server; `field` is a path such as `drivers[0].driverName`. */
+export interface FieldError {
+  field: string;
+  code: string;
+  message: string;
+}
 
 export type FieldControl = FormControl<ControlValue>;
 export type RowGroup = FormRecord<FieldControl>;
@@ -139,6 +146,39 @@ export class RenderedForm {
     const state = this.topLevel.get(id);
     if (!state) throw new Error(`Unknown field '${id}'`);
     return state;
+  }
+
+  /**
+   * Shows errors the server found (e.g. `plate`, `drivers[0].driverName`) on their controls,
+   * as a `server` error that clears on the next edit. Returns the ones no control matched.
+   */
+  applyServerErrors(errors: readonly FieldError[]): FieldError[] {
+    const unmatched: FieldError[] = [];
+    for (const error of errors) {
+      const control = this.controlAt(error.field);
+      if (control) {
+        control.setErrors({ ...control.errors, [SERVER]: error.message });
+        control.markAsTouched();
+      } else {
+        unmatched.push(error);
+      }
+    }
+    return unmatched;
+  }
+
+  /** The step index (among visible steps) holding a field path, or -1. */
+  stepIndexOf(path: string): number {
+    const id = /^[A-Za-z_][A-Za-z0-9_]*/.exec(path)?.[0];
+    return this.visibleSteps().findIndex((s) => s.fields.some((f) => f.field.id === id));
+  }
+
+  private controlAt(path: string): FieldControl | RepeaterControl | null {
+    const match = /^([A-Za-z_][A-Za-z0-9_]*)(?:\[(\d+)\]\.([A-Za-z_][A-Za-z0-9_]*))?$/.exec(path);
+    const state = match ? this.topLevel.get(match[1]) : undefined;
+    if (!match || !state?.control) return null;
+    if (match[2] === undefined) return state.control;
+    const row = state.rows?.()[Number(match[2])];
+    return (row?.group.controls[match[3]] as FieldControl | undefined) ?? null;
   }
 
   destroy(): void {

@@ -8,22 +8,26 @@
     <mat-spinner diameter="32" aria-label="Form yükleniyor" />
   }
   @case ('error') {
-    <p role="alert">Form bulunamadı veya yüklenemedi.</p>
+    <p role="alert">Form bulunamadı veya yayınlanmış bir versiyonu yok.</p>
   }
   @case ('loaded') {
-    @if (submission(); as sent) {
+    @if (result(); as done) {
       <mat-card appearance="outlined" class="result" role="status">
         <mat-card-header>
           <mat-icon mat-card-avatar class="result-icon" aria-hidden="true">check_circle</mat-icon>
-          <mat-card-title>Form gönderildi</mat-card-title>
-          <mat-card-subtitle>{{ sent.formId }} · v{{ sent.version }}</mat-card-subtitle>
+          <mat-card-title>Cevabınız kaydedildi</mat-card-title>
+          <mat-card-subtitle>
+            Kayıt #{{ done.submitted.id }} · {{ done.submitted.formId }} v{{ done.submitted.version }} ·
+            {{ formatTime(done.submitted.submittedAt) }}
+          </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <p>Gönderilen değerler (gizli alanlar boş, hesaplanan alanlar dahil):</p>
-          <pre class="result-json">{{ sent.values | json }}</pre>
+          <pre class="result-json">{{ done.values | json }}</pre>
         </mat-card-content>
         <mat-card-actions>
           <button mat-flat-button type="button" (click)="startOver()">Yeni form doldur</button>
+          <a mat-button routerLink="/submissions" [queryParams]="{ formId: done.submitted.formId }">Gelen cevaplar</a>
         </mat-card-actions>
       </mat-card>
     } @else if (pendingDraft(); as draft) {
@@ -42,16 +46,29 @@
         </mat-card-actions>
       </mat-card>
     } @else {
+      @if (submitError().length > 0) {
+        <div class="submit-error" role="alert">
+          <mat-icon aria-hidden="true">error</mat-icon>
+          <ul>
+            @for (message of submitError(); track message) {
+              <li>{{ message }}</li>
+            }
+          </ul>
+        </div>
+      }
       @for (s of [session()]; track s) {
         <dyn-form-renderer
           [definition]="definition()!"
           [draft]="startDraft()"
+          [busy]="sending()"
           (draftChange)="saveDraft($event)"
-          (submitted)="submitted($event)"
+          (submitted)="submit($event)"
         />
       }
       <p class="draft-status" aria-live="polite">
-        @if (lastSaved(); as saved) {
+        @if (sending()) {
+          Gönderiliyor…
+        } @else if (lastSaved(); as saved) {
           <mat-icon aria-hidden="true">cloud_done</mat-icon>
           Taslak kaydedildi · {{ formatTime(saved) }}
         }

@@ -1,0 +1,76 @@
+{
+  "description": "Complete, valid answers for every example form, accepted by both the renderer (frontend) and the submission validator (backend). Dates assume today = 2026-03-15.",
+  "today": "2026-03-15",
+  "answers": {
+    "casco-risk": {
+      "plate": "34ABC123",
+      "brand": "toyota",
+      "modelYear": 2019,
+      "usageType": "private",
+      "fuelType": "gasoline",
+      "hasLpg": true,
+      "lpgBrand": "brc",
+      "vehicleValue": 850000,
+      "drivers": [{ "driverName": "Ayşe Yılmaz", "driverBirthDate": "1990-05-20", "licenseYear": 2010 }],
+      "hadClaims": true,
+      "claimCount": 1,
+      "previousInsurer": "axa",
+      "previousPolicyNo": "P-123",
+      "coverageType": "full",
+      "extras": ["glass", "replacementCar"],
+      "startDate": "2026-04-01",
+      "notes": null
+    },
+    "home-risk": {
+      "city": "35",
+      "district": "Karşıyaka",
+      "fullAddress": "Atatürk Cad. No: 12 Daire 4",
+      "uavtCode": "1234567890",
+      "ownership": "owner",
+      "constructionType": "steelReinforced",
+      "constructionYear": 2005,
+      "totalFloors": 6,
+      "floor": 3,
+      "grossArea": 120,
+      "hasDask": true,
+      "daskPolicyNo": "123456789",
+      "buildingValue": 2500000,
+      "contentsValue": 400000,
+      "valuables": [{ "valuableName": "Piyano", "valuableValue": 120000 }],
+      "securityMeasures": ["steelDoor", "alarm"],
+      "uninhabitedMonths": 0
+    },
+    "health-risk": {
+      "nationalId": "12345678901",
+      "fullName": "Mehmet Demir",
+      "birthDate": "1985-11-02",
+      "gender": "male",
+      "hasSgk": true,
+      "heightCm": 180,
+      "weightKg": 82.5,
+      "smoker": false,
+      "chronicConditions": ["none"],
+      "hadSurgery": true,
+      "surgeries": [{ "surgeryName": "Apandisit", "surgeryDate": "2022-06-10", "surgeryHospital": null }],
+      "planType": "inOutpatient",
+      "outpatientVisits": "10",
+      "declarationAccepted": true
+    },
+    "travel-risk": {
+      "region": "schengen",
+      "countries": ["IT", "FR"],
+      "purpose": "tourism",
+      "departureDate": "2026-07-01",
+      "returnDate": "2026-07-10",
+      "winterSports": false,
+      "travelers": [
+        { "travelerName": "AYSE YILMAZ", "passportNo": "U12345678", "travelerBirthDate": "1990-05-20" },
+        { "travelerName": "ALI YILMAZ", "passportNo": "U87654321", "travelerBirthDate": "2015-01-10" }
+      ],
+      "coverageLimit": "50000",
+      "cancellationCover": true,
+      "tripCost": 2400,
+      "email": "ayse@example.com"
+    }
+  }
+}

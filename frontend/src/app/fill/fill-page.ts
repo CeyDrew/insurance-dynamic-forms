@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,15 +6,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith } from 'rxjs';
 
-export interface FormSummary {
-  id: string;
-  version: number;
-  title: string;
-  description?: string;
-}
+import { FormsApi, FormSummary } from '../api/forms-api';
 
 type ListState = { status: 'loading' } | { status: 'error' } | { status: 'loaded'; forms: FormSummary[] };
 
+/** Published forms a customer or agent can fill in. */
 @Component({
   selector: 'app-fill-page',
   imports: [RouterLink, MatCardModule, MatButtonModule, MatProgressSpinnerModule],
@@ -30,23 +25,20 @@ type ListState = { status: 'loading' } | { status: 'error' } | { status: 'loaded
       }
       @case ('loaded') {
         <ul class="form-list">
-          @for (form of forms(); track form.id) {
+          @for (form of forms(); track form.formKey) {
             <li>
               <mat-card appearance="outlined">
                 <mat-card-header>
                   <mat-card-title>{{ form.title }}</mat-card-title>
-                  <mat-card-subtitle>{{ form.id }} · v{{ form.version }}</mat-card-subtitle>
+                  <mat-card-subtitle>{{ form.formKey }} · v{{ form.publishedVersion }}</mat-card-subtitle>
                 </mat-card-header>
-                @if (form.description) {
-                  <mat-card-content>
-                    <p>{{ form.description }}</p>
-                  </mat-card-content>
-                }
                 <mat-card-actions>
-                  <a mat-flat-button [routerLink]="['/fill', form.id]">Doldur</a>
+                  <a mat-flat-button [routerLink]="['/fill', form.formKey]">Doldur</a>
                 </mat-card-actions>
               </mat-card>
             </li>
+          } @empty {
+            <p>Yayınlanmış form yok.</p>
           }
         </ul>
       }
@@ -67,14 +59,14 @@ type ListState = { status: 'loading' } | { status: 'error' } | { status: 'loaded
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FillPage {
-  private readonly http = inject(HttpClient);
-
   protected readonly state = toSignal(
-    this.http.get<FormSummary[]>('/api/examples').pipe(
-      map((forms): ListState => ({ status: 'loaded', forms })),
-      catchError(() => of<ListState>({ status: 'error' })),
-      startWith<ListState>({ status: 'loading' }),
-    ),
+    inject(FormsApi)
+      .definitions()
+      .pipe(
+        map((all): ListState => ({ status: 'loaded', forms: all.filter((f) => f.publishedVersion !== null) })),
+        catchError(() => of<ListState>({ status: 'error' })),
+        startWith<ListState>({ status: 'loading' }),
+      ),
     { requireSync: true },
   );
 

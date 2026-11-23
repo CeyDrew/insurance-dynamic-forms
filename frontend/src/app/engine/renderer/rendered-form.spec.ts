@@ -5,11 +5,12 @@ import casco from '../../../../../examples/casco.json';
 import health from '../../../../../examples/health.json';
 import home from '../../../../../examples/home.json';
 import travel from '../../../../../examples/travel.json';
+import shared from '../../../../../fixtures/example-answers.json';
 import { FormDefinition } from '../model';
 import { FormValues } from './field-value';
 import { FieldControl, RenderedForm, RepeaterControl } from './rendered-form';
 
-const TODAY = '2026-03-15';
+const TODAY = shared.today;
 
 function render(definition: unknown, initialValues?: FormValues): RenderedForm {
   const form = new RenderedForm(definition as FormDefinition, {
@@ -32,94 +33,12 @@ function set(form: RenderedForm, id: string, value: unknown): void {
   TestBed.tick();
 }
 
-/** Complete, valid answers for each example: the phase 3 "done" criterion. */
+/** Complete, valid answers for each example; the same file the backend submission tests use. */
 const ANSWERS: [string, unknown, FormValues][] = [
-  [
-    'casco',
-    casco,
-    {
-      plate: '34ABC123',
-      brand: 'toyota',
-      modelYear: 2019,
-      usageType: 'private',
-      fuelType: 'gasoline',
-      hasLpg: true,
-      lpgBrand: 'brc',
-      vehicleValue: 850000,
-      drivers: [{ driverName: 'Ayşe Yılmaz', driverBirthDate: '1990-05-20', licenseYear: 2010 }],
-      hadClaims: true,
-      claimCount: 1,
-      previousInsurer: 'axa',
-      previousPolicyNo: 'P-123',
-      coverageType: 'full',
-      extras: ['glass', 'replacementCar'],
-      startDate: '2026-04-01',
-      notes: null,
-    },
-  ],
-  [
-    'home',
-    home,
-    {
-      city: '35',
-      district: 'Karşıyaka',
-      fullAddress: 'Atatürk Cad. No: 12 Daire 4',
-      uavtCode: '1234567890',
-      ownership: 'owner',
-      constructionType: 'steelReinforced',
-      constructionYear: 2005,
-      totalFloors: 6,
-      floor: 3,
-      grossArea: 120,
-      hasDask: true,
-      daskPolicyNo: '123456789',
-      buildingValue: 2500000,
-      contentsValue: 400000,
-      valuables: [{ valuableName: 'Piyano', valuableValue: 120000 }],
-      securityMeasures: ['steelDoor', 'alarm'],
-      uninhabitedMonths: 0,
-    },
-  ],
-  [
-    'health',
-    health,
-    {
-      nationalId: '12345678901',
-      fullName: 'Mehmet Demir',
-      birthDate: '1985-11-02',
-      gender: 'male',
-      hasSgk: true,
-      heightCm: 180,
-      weightKg: 82.5,
-      smoker: false,
-      chronicConditions: ['none'],
-      hadSurgery: true,
-      surgeries: [{ surgeryName: 'Apandisit', surgeryDate: '2022-06-10', surgeryHospital: null }],
-      planType: 'inOutpatient',
-      outpatientVisits: '10',
-      declarationAccepted: true,
-    },
-  ],
-  [
-    'travel',
-    travel,
-    {
-      region: 'schengen',
-      countries: ['IT', 'FR'],
-      purpose: 'tourism',
-      departureDate: '2026-07-01',
-      returnDate: '2026-07-10',
-      winterSports: false,
-      travelers: [
-        { travelerName: 'AYSE YILMAZ', passportNo: 'U12345678', travelerBirthDate: '1990-05-20' },
-        { travelerName: 'ALI YILMAZ', passportNo: 'U87654321', travelerBirthDate: '2015-01-10' },
-      ],
-      coverageLimit: '50000',
-      cancellationCover: true,
-      tripCost: 2400,
-      email: 'ayse@example.com',
-    },
-  ],
+  ['casco', casco, shared.answers['casco-risk'] as FormValues],
+  ['home', home, shared.answers['home-risk'] as FormValues],
+  ['health', health, shared.answers['health-risk'] as FormValues],
+  ['travel', travel, shared.answers['travel-risk'] as FormValues],
 ];
 
 describe('RenderedForm', () => {
@@ -289,6 +208,25 @@ describe('RenderedForm', () => {
 
     expect(form.visibleSteps().map((s) => s.step.id)).toEqual(['one', 'two']);
     expect(form.root.valid).toBe(false);
+  });
+
+  it('puts server errors on their controls, including repeater rows', () => {
+    const form = render(casco, ANSWERS[0][2]);
+
+    const unmatched = form.applyServerErrors([
+      { field: 'plate', code: 'PATTERN', message: 'Geçersiz plaka' },
+      { field: 'drivers[0].driverName', code: 'REQUIRED', message: 'Bu alan zorunlu' },
+      { field: 'discount', code: 'UNKNOWN_FIELD', message: 'Formda böyle bir alan yok' },
+    ]);
+
+    expect(control(form, 'plate').errors).toEqual({ server: 'Geçersiz plaka' });
+    const row = form.field('drivers').rows!()[0];
+    expect(row.group.controls['driverName'].errors).toEqual({ server: 'Bu alan zorunlu' });
+    expect(unmatched.map((e) => e.field)).toEqual(['discount']);
+    expect(form.stepIndexOf('drivers[0].driverName')).toBe(1);
+
+    control(form, 'plate').setValue('34XYZ99'); // editing clears the server's verdict
+    expect(control(form, 'plate').errors).toBeNull();
   });
 
   it('stores dates as YYYY-MM-DD in the model and Date in the control', () => {
