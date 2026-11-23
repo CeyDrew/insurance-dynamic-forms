@@ -117,7 +117,7 @@ renderer sonucu cache'ler (Faz 3).
 ## İfadeler
 
 `visibleWhen`, `requiredWhen`, `disabledWhen` ve `expression` küçük, güvenli bir ifade dilindedir
-(sözdizimi ve tam anlamı: `docs/rule-language.md`, Faz 2). `eval` / `new Function` kullanılmaz.
+(sözdizimi ve tam anlamı: [`rule-language.md`](rule-language.md)). `eval` / `new Function` kullanılmaz.
 
 ```text
 hasLpg == true
@@ -155,8 +155,8 @@ Backend `POST /api/definitions/validate` her tanımı şu kurallarla kontrol ede
 | `CONFLICTING_PROPERTIES` | Birlikte verilemeyen anahtarlar (ör. `options` + `optionsSource`). |
 | `DUPLICATE_OPTION`       | Seçeneklerde tekrar eden `value`. |
 | `INVALID_VALIDATOR`      | Validator tipe uygun değil, değeri hatalı, tekrar ediyor veya min > max. |
-| `EXPRESSION_SYNTAX`      | İfade okunamıyor. |
+| `EXPRESSION_SYNTAX`      | İfade okunamıyor veya fonksiyona yanlış sayıda argüman verilmiş; mesajda satır ve sütun var. |
 | `UNKNOWN_REFERENCE`      | İfadede olmayan bir alan geçiyor. |
 | `INVALID_REFERENCE`      | Alan var ama referans verilemez (`info`, kapsam dışı repeater alanı, alanın kendi kuralı). |
 | `UNKNOWN_FUNCTION`       | Listede olmayan fonksiyon. |
-| `CIRCULAR_DEPENDENCY`    | `computed` alanlar döngüsel olarak birbirine bağlı (ör. `a → b → a`). |
+| `CIRCULAR_DEPENDENCY`    | Alan değerleri döngüsel olarak birbirine bağlı (ör. `a → b → a`). `computed` ifadeleri ile görünürlük kuralları (alanın, adımının ve repeater'ının `visibleWhen`'i) birlikte değerlendirilir, çünkü gizli alan `null` okunur. |

@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +21,9 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.springframework.stereotype.Component;
+
+import com.portfolio.forms.expression.Expression;
+import com.portfolio.forms.expression.ExpressionException;
 
 import tools.jackson.databind.JsonNode;
 
@@ -36,8 +40,6 @@ public class FormDefinitionValidator {
 	static final Pattern CURRENCY_CODE = Pattern.compile("^[A-Z]{3}$");
 	static final String TODAY = "today";
 
-	public static final Set<String> FUNCTIONS = Set.of("currentYear", "today", "age", "daysBetween", "len", "count",
-			"contains", "isEmpty", "round", "min", "max", "abs");
 
 	/** Type-specific keys each field type accepts. */
 	private static final Map<FieldType, Set<String>> TYPE_PROPERTIES = new EnumMap<>(Map.ofEntries(
@@ -76,6 +78,10 @@ public class FormDefinitionValidator {
 		}
 	}
 
+	/** Fields an expression reads, and where that expression sits. */
+	private record RuleDependencies(String path, Set<String> fieldIds) {
+	}
+
 	private enum RuleKind {
 		STEP_VISIBLE_WHEN, VISIBLE_WHEN, REQUIRED_WHEN, DISABLED_WHEN, EXPRESSION
 	}
@@ -89,10 +95,12 @@ public class FormDefinitionValidator {
 
 		private final FormDefinition form;
 		private final List<DefinitionError> errors = new ArrayList<>();
-		private final Map<String, Symbol> symbols = new HashMap<>();
+		private final Map<String, Symbol> symbols = new LinkedHashMap<>();
 		private final List<ExpressionSite> sites = new ArrayList<>();
-		/** computed field id -> ids it reads, in declaration order. */
-		private final Map<String, Set<String>> computedDependencies = new LinkedHashMap<>();
+		/** "fieldId.KIND" -> fields read by that expression or visibleWhen rule. */
+		private final Map<String, RuleDependencies> ruleDependencies = new HashMap<>();
+		/** step id -> fields read by its visibleWhen. */
+		private final Map<String, RuleDependencies> stepDependencies = new HashMap<>();
 
 		Run(FormDefinition form) {
 			this.form = form;
@@ -125,7 +133,7 @@ public class FormDefinitionValidator {
 			for (ExpressionSite site : sites) {
 				expression(site);
 			}
-			computedCycles();
+			cycles();
 			return errors;
 		}
 
@@ -450,21 +458,18 @@ public class FormDefinitionValidator {
 		}
 
 		private void expression(ExpressionSite site) {
-			ExpressionScanner.Result result;
+			Expression expression;
 			try {
-				result = ExpressionScanner.scan(site.expression());
+				expression = Expression.compile(site.expression());
 			}
-			catch (ExpressionSyntaxException ex) {
-				error(site.path(), EXPRESSION_SYNTAX, ex.getMessage() + " (sütun " + ex.column() + ")");
+			catch (ExpressionException ex) {
+				DefinitionErrorCode code = ex.kind() == ExpressionException.Kind.UNKNOWN_FUNCTION ? UNKNOWN_FUNCTION
+						: EXPRESSION_SYNTAX;
+				error(site.path(), code, ex.getMessage() + " (satır " + ex.line() + ", sütun " + ex.column() + ")");
 				return;
 			}
-			for (String function : result.functions()) {
-				if (!FUNCTIONS.contains(function)) {
-					error(site.path(), UNKNOWN_FUNCTION, "Bilinmeyen fonksiyon '" + function + "'");
-				}
-			}
-			Set<String> dependencies = new java.util.LinkedHashSet<>();
-			for (String name : result.variables()) {
+			Set<String> dependencies = new LinkedHashSet<>();
+			for (String name : expression.variables()) {
 				Symbol target = symbols.get(name);
 				if (target == null) {
 					error(site.path(), UNKNOWN_REFERENCE, "'" + name + "' adında bir alan yok");
@@ -477,10 +482,13 @@ public class FormDefinitionValidator {
 				}
 				dependencies.add(name);
 			}
-			Symbol owner = site.ownerId() == null ? null : symbols.get(site.ownerId());
-			if (site.kind() == RuleKind.EXPRESSION && owner != null && !owner.isStep()
-					&& owner.field().type() == FieldType.COMPUTED) {
-				computedDependencies.put(site.ownerId(), dependencies);
+			switch (site.kind()) {
+				case EXPRESSION, VISIBLE_WHEN -> ruleDependencies.put(site.ownerId() + "." + site.kind(),
+						new RuleDependencies(site.path(), dependencies));
+				case STEP_VISIBLE_WHEN -> stepDependencies.put(site.stepId(), new RuleDependencies(site.path(), dependencies));
+				default -> {
+					// requiredWhen and disabledWhen do not change any value, so they cannot form a cycle.
+				}
 			}
 		}
 
@@ -506,16 +514,41 @@ public class FormDefinitionValidator {
 			return null;
 		}
 
-		/** Reports each cycle among computed fields once, at the first field of the cycle. */
-		private void computedCycles() {
+		/**
+		 * A field's value depends on its expression (computed fields) and, because hidden fields
+		 * read as null, on every rule that decides its visibility: its own visibleWhen, its step's
+		 * and its repeater's. Reports each cycle in that graph once, at the edge that starts it.
+		 */
+		private void cycles() {
+			Map<String, Map<String, String>> edges = new LinkedHashMap<>(); // field -> (dependency -> rule path)
+			for (Symbol symbol : symbols.values()) {
+				if (symbol.isStep()) {
+					continue;
+				}
+				Map<String, String> out = new LinkedHashMap<>();
+				addEdges(out, ruleDependencies.get(symbol.id() + "." + RuleKind.EXPRESSION));
+				addEdges(out, ruleDependencies.get(symbol.id() + "." + RuleKind.VISIBLE_WHEN));
+				addEdges(out, stepDependencies.get(symbol.stepId()));
+				if (symbol.repeaterId() != null) {
+					addEdges(out, ruleDependencies.get(symbol.repeaterId() + "." + RuleKind.VISIBLE_WHEN));
+				}
+				edges.put(symbol.id(), out);
+			}
 			Map<String, Integer> state = new HashMap<>(); // absent = new, 1 = on stack, 2 = done
 			Set<Set<String>> reported = new HashSet<>();
-			for (String id : computedDependencies.keySet()) {
-				visit(id, new ArrayList<>(), state, reported);
+			for (String id : edges.keySet()) {
+				visit(id, edges, new ArrayList<>(), state, reported);
 			}
 		}
 
-		private void visit(String id, List<String> stack, Map<String, Integer> state, Set<Set<String>> reported) {
+		private static void addEdges(Map<String, String> out, RuleDependencies rule) {
+			if (rule != null) {
+				rule.fieldIds().forEach(id -> out.putIfAbsent(id, rule.path()));
+			}
+		}
+
+		private void visit(String id, Map<String, Map<String, String>> edges, List<String> stack,
+				Map<String, Integer> state, Set<Set<String>> reported) {
 			Integer s = state.get(id);
 			if (s != null && s == 2) {
 				return;
@@ -524,18 +557,16 @@ public class FormDefinitionValidator {
 				List<String> cycle = new ArrayList<>(stack.subList(stack.indexOf(id), stack.size()));
 				if (reported.add(Set.copyOf(cycle))) {
 					cycle.add(id);
-					String first = cycle.get(0);
-					error(symbols.get(first).path() + ".expression", CIRCULAR_DEPENDENCY,
-							"Hesaplanan alanlar döngüsel olarak birbirine bağlı: " + String.join(" → ", cycle));
+					String path = edges.get(cycle.get(0)).get(cycle.get(1));
+					error(path, CIRCULAR_DEPENDENCY,
+							"Alanlar döngüsel olarak birbirine bağlı: " + String.join(" → ", cycle));
 				}
 				return;
 			}
 			state.put(id, 1);
 			stack.add(id);
-			for (String dependency : computedDependencies.getOrDefault(id, Set.of())) {
-				if (computedDependencies.containsKey(dependency)) {
-					visit(dependency, stack, state, reported);
-				}
+			for (String dependency : edges.getOrDefault(id, Map.of()).keySet()) {
+				visit(dependency, edges, stack, state, reported);
 			}
 			stack.remove(stack.size() - 1);
 			state.put(id, 2);

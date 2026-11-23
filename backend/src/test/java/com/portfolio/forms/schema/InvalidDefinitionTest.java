@@ -184,7 +184,25 @@ class InvalidDefinitionTest {
 						{ "id": "a", "type": "computed", "label": "A", "expression": "b + 1" },
 						{ "id": "b", "type": "computed", "label": "B", "expression": "c * 2" },
 						{ "id": "c", "type": "computed", "label": "C", "expression": "a - 1" }"""),
-						"steps[0].fields[0].expression", DefinitionErrorCode.CIRCULAR_DEPENDENCY));
+						"steps[0].fields[0].expression", DefinitionErrorCode.CIRCULAR_DEPENDENCY),
+				Arguments.of("wrong argument count", form(AGE + """
+						, { "id": "b", "type": "computed", "label": "B", "expression": "round(age, 1, 2)" }"""),
+						"steps[0].fields[1].expression", DefinitionErrorCode.EXPRESSION_SYNTAX),
+				Arguments.of("visibility cycle", form("""
+						{ "id": "a", "type": "text", "label": "A", "visibleWhen": "b == 'x'" },
+						{ "id": "b", "type": "text", "label": "B", "visibleWhen": "a == 'y'" }"""),
+						"steps[0].fields[0].visibleWhen", DefinitionErrorCode.CIRCULAR_DEPENDENCY),
+				Arguments.of("computed hidden by its dependent", form("""
+						{ "id": "c", "type": "computed", "label": "C", "expression": "d + 1" },
+						{ "id": "d", "type": "number", "label": "D", "visibleWhen": "c > 1" }"""),
+						"steps[0].fields[0].expression", DefinitionErrorCode.CIRCULAR_DEPENDENCY),
+				Arguments.of("step visibility cycle", """
+						{ "id": "f", "version": 1, "title": "T", "steps": [
+						  { "id": "one", "title": "1", "visibleWhen": "y == 1",
+						    "fields": [ { "id": "x", "type": "number", "label": "X" } ] },
+						  { "id": "two", "title": "2", "visibleWhen": "x == 1",
+						    "fields": [ { "id": "y", "type": "number", "label": "Y" } ] } ] }""",
+						"steps[0].visibleWhen", DefinitionErrorCode.CIRCULAR_DEPENDENCY));
 	}
 
 	@ParameterizedTest(name = "{0}")
@@ -225,14 +243,23 @@ class InvalidDefinitionTest {
 	}
 
 	@Test
-	void syntaxErrorMessageHasColumn() {
+	void syntaxErrorMessageHasLineAndColumn() {
 		ValidationReport report = service.validate(form(AGE + """
-				, { "id": "b", "type": "text", "label": "B", "visibleWhen": "age = 18" }"""));
+				, { "id": "b", "type": "text", "label": "B", "visibleWhen": "age > 1 &&\\n age = 18" }"""));
 
 		assertThat(report.errors()).singleElement()
 			.extracting(DefinitionError::message)
-			.asString()
-			.contains("'==' kullanın", "sütun 5");
+			.isEqualTo("'=' yerine '==' kullanın (satır 2, sütun 6)");
+	}
+
+	@Test
+	void requiredWhenMayReadAFieldThatDependsOnThisOne() {
+		// Only values and visibility form the dependency graph; requiredWhen changes neither.
+		ValidationReport report = service.validate(form("""
+				{ "id": "a", "type": "text", "label": "A", "requiredWhen": "b == 'x'" },
+				{ "id": "b", "type": "text", "label": "B", "visibleWhen": "a == 'y'" }"""));
+
+		assertThat(report.errors()).isEmpty();
 	}
 
 	@Test
