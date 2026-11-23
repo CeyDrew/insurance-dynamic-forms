@@ -213,6 +213,15 @@ class ApiIntegrationTest {
 			.andExpect(status().isBadRequest());
 	}
 
+	@Test
+	void describesTheApiWithOpenApi() throws Exception {
+		mvc.perform(get("/v3/api-docs"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.info.title").value("Sigorta Dinamik Form Motoru API"))
+			.andExpect(jsonPath("$.paths['/api/submissions']").exists())
+			.andExpect(jsonPath("$.paths['/api/definitions/{formKey}/versions/{version}/publish']").exists());
+	}
+
 	// ---- helpers ----------------------------------------------------------------------
 
 	private ResultActions create(String definition) throws Exception {
