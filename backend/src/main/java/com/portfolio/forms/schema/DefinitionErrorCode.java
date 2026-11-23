@@ -1,0 +1,20 @@
+package com.portfolio.forms.schema;
+
+/** Error codes listed in {@code docs/form-definition-spec.md}. */
+public enum DefinitionErrorCode {
+	INVALID_JSON,
+	UNKNOWN_PROPERTY,
+	INVALID_VALUE,
+	REQUIRED,
+	INVALID_ID,
+	DUPLICATE_ID,
+	PROPERTY_NOT_ALLOWED,
+	CONFLICTING_PROPERTIES,
+	DUPLICATE_OPTION,
+	INVALID_VALIDATOR,
+	EXPRESSION_SYNTAX,
+	UNKNOWN_REFERENCE,
+	INVALID_REFERENCE,
+	UNKNOWN_FUNCTION,
+	CIRCULAR_DEPENDENCY
+}

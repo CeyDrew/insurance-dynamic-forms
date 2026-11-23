@@ -1,0 +1,163 @@
+{
+  "id": "health-risk",
+  "version": 1,
+  "title": "Tamamlayıcı Sağlık Sigortası Beyan Formu",
+  "description": "Beyanınız poliçenin parçasıdır; eksik veya yanlış beyan tazminatı etkileyebilir.",
+  "steps": [
+    {
+      "id": "personal",
+      "title": "Kişisel Bilgiler",
+      "fields": [
+        {
+          "id": "nationalId",
+          "type": "text",
+          "label": "T.C. Kimlik No",
+          "required": true,
+          "validators": [{ "type": "pattern", "value": "^[1-9][0-9]{10}$", "message": "T.C. Kimlik No 11 haneli olmalı" }]
+        },
+        { "id": "fullName", "type": "text", "label": "Ad Soyad", "required": true,
+          "validators": [{ "type": "minLength", "value": 3 }, { "type": "maxLength", "value": 100 }] },
+        { "id": "birthDate", "type": "date", "label": "Doğum Tarihi", "required": true,
+          "validators": [{ "type": "minDate", "value": "1940-01-01" }, { "type": "maxDate", "value": "today" }] },
+        { "id": "insuredAge", "type": "computed", "label": "Yaş", "expression": "age(birthDate)" },
+        {
+          "id": "ageLimitNote",
+          "type": "info",
+          "label": "Yaş sınırı",
+          "content": "65 yaş üstü başvurular ek değerlendirmeye alınır.",
+          "visibleWhen": "insuredAge > 65"
+        },
+        {
+          "id": "gender",
+          "type": "radio",
+          "label": "Cinsiyet",
+          "required": true,
+          "options": [
+            { "value": "female", "label": "Kadın" },
+            { "value": "male", "label": "Erkek" }
+          ]
+        },
+        { "id": "hasSgk", "type": "boolean", "label": "SGK kaydınız aktif mi?", "required": true,
+          "hint": "Tamamlayıcı sağlık sigortası için SGK kaydı şarttır." }
+      ]
+    },
+    {
+      "id": "measurements",
+      "title": "Boy ve Kilo",
+      "fields": [
+        { "id": "heightCm", "type": "number", "label": "Boy (cm)", "required": true,
+          "validators": [{ "type": "min", "value": 100 }, { "type": "max", "value": 230 }] },
+        { "id": "weightKg", "type": "number", "label": "Kilo (kg)", "required": true, "decimals": 1,
+          "validators": [{ "type": "min", "value": 30 }, { "type": "max", "value": 250 }] },
+        {
+          "id": "bmi",
+          "type": "computed",
+          "label": "Vücut Kitle İndeksi",
+          "expression": "round(weightKg / ((heightCm / 100) * (heightCm / 100)), 1)",
+          "format": "number"
+        },
+        {
+          "id": "bmiNote",
+          "type": "info",
+          "label": "Bilgi",
+          "content": "Vücut kitle indeksi 35 üzerindeyse sağlık raporu istenebilir.",
+          "visibleWhen": "bmi > 35"
+        }
+      ]
+    },
+    {
+      "id": "medical",
+      "title": "Sağlık Beyanı",
+      "fields": [
+        { "id": "smoker", "type": "boolean", "label": "Sigara kullanıyor musunuz?", "required": true },
+        {
+          "id": "cigarettesPerDay",
+          "type": "number",
+          "label": "Günde kaç adet?",
+          "visibleWhen": "smoker == true",
+          "requiredWhen": "smoker == true",
+          "validators": [{ "type": "min", "value": 1 }, { "type": "max", "value": 100 }]
+        },
+        {
+          "id": "chronicConditions",
+          "type": "multiselect",
+          "label": "Tanı konmuş kronik rahatsızlıklar",
+          "required": true,
+          "options": [
+            { "value": "none", "label": "Yok" },
+            { "value": "diabetes", "label": "Diyabet" },
+            { "value": "hypertension", "label": "Hipertansiyon" },
+            { "value": "heart", "label": "Kalp-damar hastalığı" },
+            { "value": "asthma", "label": "Astım / KOAH" },
+            { "value": "cancer", "label": "Kanser öyküsü" },
+            { "value": "other", "label": "Diğer" }
+          ],
+          "validators": [{ "type": "minItems", "value": 1, "message": "Rahatsızlık yoksa \"Yok\" seçin" }]
+        },
+        {
+          "id": "conditionDetails",
+          "type": "textarea",
+          "label": "Rahatsızlık detayları",
+          "hint": "Tanı yılı, kullanılan ilaçlar ve tedavi süreci.",
+          "visibleWhen": "count(chronicConditions) > 0 && !contains(chronicConditions, 'none')",
+          "requiredWhen": "count(chronicConditions) > 0 && !contains(chronicConditions, 'none')",
+          "validators": [{ "type": "maxLength", "value": 1000 }]
+        },
+        { "id": "hadSurgery", "type": "boolean", "label": "Son 5 yılda ameliyat oldunuz mu?", "required": true },
+        {
+          "id": "surgeries",
+          "type": "repeater",
+          "label": "Ameliyatlar",
+          "itemLabel": "Ameliyat",
+          "addLabel": "Ameliyat ekle",
+          "visibleWhen": "hadSurgery == true",
+          "requiredWhen": "hadSurgery == true",
+          "validators": [{ "type": "maxItems", "value": 10 }],
+          "fields": [
+            { "id": "surgeryName", "type": "text", "label": "Ameliyat", "required": true },
+            { "id": "surgeryDate", "type": "date", "label": "Tarih", "required": true,
+              "validators": [{ "type": "maxDate", "value": "today" }] },
+            { "id": "surgeryHospital", "type": "text", "label": "Hastane" }
+          ]
+        },
+        {
+          "id": "pregnant",
+          "type": "boolean",
+          "label": "Şu anda hamile misiniz?",
+          "visibleWhen": "gender == 'female' && insuredAge >= 18 && insuredAge <= 50",
+          "requiredWhen": "gender == 'female' && insuredAge >= 18 && insuredAge <= 50"
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": "Plan Seçimi",
+      "fields": [
+        {
+          "id": "planType",
+          "type": "radio",
+          "label": "Plan",
+          "required": true,
+          "options": [
+            { "value": "inpatient", "label": "Sadece Yatarak Tedavi" },
+            { "value": "inOutpatient", "label": "Yatarak + Ayakta Tedavi" }
+          ]
+        },
+        {
+          "id": "outpatientVisits",
+          "type": "select",
+          "label": "Yıllık Ayakta Tedavi Hakkı",
+          "visibleWhen": "planType == 'inOutpatient'",
+          "requiredWhen": "planType == 'inOutpatient'",
+          "options": [
+            { "value": "6", "label": "6 vizite" },
+            { "value": "10", "label": "10 vizite" },
+            { "value": "unlimited", "label": "Limitsiz" }
+          ]
+        },
+        { "id": "declarationAccepted", "type": "boolean", "label": "Beyanımın doğru ve eksiksiz olduğunu onaylıyorum.",
+          "required": true }
+      ]
+    }
+  ]
+}

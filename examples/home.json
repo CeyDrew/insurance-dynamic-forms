@@ -1,0 +1,146 @@
+{
+  "id": "home-risk",
+  "version": 1,
+  "title": "Konut Sigortası Risk Formu",
+  "description": "Konutunuzun yapısı ve eşya değeri teklif hesaplamasında kullanılır.",
+  "steps": [
+    {
+      "id": "address",
+      "title": "Adres",
+      "fields": [
+        {
+          "id": "city",
+          "type": "select",
+          "label": "İl",
+          "required": true,
+          "optionsSource": { "type": "remote", "url": "/api/lookups/cities" }
+        },
+        { "id": "district", "type": "text", "label": "İlçe", "required": true,
+          "validators": [{ "type": "maxLength", "value": 50 }] },
+        { "id": "fullAddress", "type": "textarea", "label": "Açık Adres", "rows": 3, "required": true,
+          "validators": [{ "type": "minLength", "value": 10 }, { "type": "maxLength", "value": 300 }] },
+        {
+          "id": "uavtCode",
+          "type": "text",
+          "label": "UAVT Adres Kodu",
+          "hint": "e-Devlet adres bilgilerinizde yer alan 10 haneli kod.",
+          "validators": [{ "type": "pattern", "value": "^[0-9]{10}$", "message": "UAVT kodu 10 haneli olmalı" }]
+        },
+        {
+          "id": "ownership",
+          "type": "radio",
+          "label": "Konuttaki Durumunuz",
+          "required": true,
+          "options": [
+            { "value": "owner", "label": "Ev sahibi" },
+            { "value": "tenant", "label": "Kiracı" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "building",
+      "title": "Bina Bilgileri",
+      "fields": [
+        {
+          "id": "constructionType",
+          "type": "select",
+          "label": "Yapı Tarzı",
+          "required": true,
+          "options": [
+            { "value": "steelReinforced", "label": "Çelik / Betonarme Karkas" },
+            { "value": "masonry", "label": "Yığma Kagir" },
+            { "value": "other", "label": "Diğer" }
+          ]
+        },
+        { "id": "constructionYear", "type": "number", "label": "İnşa Yılı", "required": true,
+          "validators": [{ "type": "min", "value": 1900 }, { "type": "max", "value": 2027 }] },
+        {
+          "id": "buildingAge",
+          "type": "computed",
+          "label": "Bina Yaşı",
+          "expression": "currentYear() - constructionYear"
+        },
+        {
+          "id": "oldBuildingNote",
+          "type": "info",
+          "label": "Uyarı",
+          "content": "1999 öncesi binalarda deprem teminatı için ekspertiz istenebilir.",
+          "visibleWhen": "constructionYear < 1999"
+        },
+        { "id": "totalFloors", "type": "number", "label": "Bina Kat Sayısı", "required": true,
+          "validators": [{ "type": "min", "value": 1 }, { "type": "max", "value": 80 }] },
+        { "id": "floor", "type": "number", "label": "Bulunduğu Kat", "required": true,
+          "hint": "Bodrum için negatif değer girin.",
+          "validators": [{ "type": "min", "value": -5 }, { "type": "max", "value": 80 }] },
+        { "id": "grossArea", "type": "number", "label": "Brüt Alan (m²)", "required": true,
+          "validators": [{ "type": "min", "value": 20 }, { "type": "max", "value": 2000 }] },
+        { "id": "hasDask", "type": "boolean", "label": "Geçerli DASK poliçeniz var mı?", "required": true },
+        {
+          "id": "daskPolicyNo",
+          "type": "text",
+          "label": "DASK Poliçe No",
+          "visibleWhen": "hasDask == true",
+          "requiredWhen": "hasDask == true",
+          "validators": [{ "type": "pattern", "value": "^[0-9]{8,12}$" }]
+        }
+      ]
+    },
+    {
+      "id": "contents",
+      "title": "Eşya ve Güvenlik",
+      "fields": [
+        {
+          "id": "buildingValue",
+          "type": "currency",
+          "label": "Bina Bedeli",
+          "visibleWhen": "ownership == 'owner'",
+          "requiredWhen": "ownership == 'owner'",
+          "validators": [{ "type": "min", "value": 100000 }]
+        },
+        { "id": "contentsValue", "type": "currency", "label": "Eşya Bedeli", "required": true,
+          "validators": [{ "type": "min", "value": 10000 }, { "type": "max", "value": 20000000 }] },
+        {
+          "id": "valuables",
+          "type": "repeater",
+          "label": "Değerli Eşyalar",
+          "hint": "Tek parçası 50.000 TL üzerindeki eşyaları ayrıca beyan edin.",
+          "itemLabel": "Eşya",
+          "addLabel": "Eşya ekle",
+          "validators": [{ "type": "maxItems", "value": 10 }],
+          "fields": [
+            { "id": "valuableName", "type": "text", "label": "Eşya", "required": true },
+            { "id": "valuableValue", "type": "currency", "label": "Değeri", "required": true,
+              "validators": [{ "type": "min", "value": 50000 }] }
+          ]
+        },
+        {
+          "id": "securityMeasures",
+          "type": "multiselect",
+          "label": "Güvenlik Önlemleri",
+          "options": [
+            { "value": "alarm", "label": "Alarm" },
+            { "value": "steelDoor", "label": "Çelik Kapı" },
+            { "value": "bars", "label": "Pencere Demiri" },
+            { "value": "guard", "label": "Site Güvenliği" },
+            { "value": "camera", "label": "Kamera" }
+          ]
+        },
+        {
+          "id": "uninhabitedMonths",
+          "type": "number",
+          "label": "Yılda kaç ay boş kalıyor?",
+          "defaultValue": 0,
+          "validators": [{ "type": "min", "value": 0 }, { "type": "max", "value": 12 }]
+        },
+        {
+          "id": "riskNote",
+          "type": "info",
+          "label": "Uyarı",
+          "content": "Güvenlik önlemi olmayan ve uzun süre boş kalan konutlarda hırsızlık teminatı sınırlandırılabilir.",
+          "visibleWhen": "count(securityMeasures) == 0 && uninhabitedMonths > 3"
+        }
+      ]
+    }
+  ]
+}
