@@ -27,6 +27,22 @@
   font-size: 13px;
 }
 
+.submit-error {
+  display: flex;
+  gap: 8px;
+  max-width: 856px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+
+  ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+}
+
 .draft-status {
   display: flex;
   align-items: center;

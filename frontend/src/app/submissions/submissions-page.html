@@ -1,0 +1,94 @@
+<h1>Gelen Cevaplar</h1>
+
+<form class="filters" (ngSubmit)="apply()">
+  <mat-form-field appearance="outline">
+    <mat-label>Form</mat-label>
+    <mat-select [(ngModel)]="selectedForm" name="form">
+      <mat-option value="">Tümü</mat-option>
+      @for (form of forms(); track form.formKey) {
+        <mat-option [value]="form.formKey">{{ form.title }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Alan</mat-label>
+    <input matInput [(ngModel)]="field" name="field" placeholder="hasLpg" autocomplete="off" />
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Değer</mat-label>
+    <input matInput [(ngModel)]="value" name="value" placeholder="true" autocomplete="off" />
+    <mat-hint>Çoklu seçimde herhangi bir eleman eşleşir</mat-hint>
+  </mat-form-field>
+  <button mat-flat-button type="submit">
+    <mat-icon aria-hidden="true">filter_list</mat-icon>
+    Filtrele
+  </button>
+  <button mat-button type="button" (click)="example()">Örnek: LPG'li araçlar</button>
+</form>
+
+@switch (state().status) {
+  @case ('loading') {
+    <mat-progress-bar mode="indeterminate" aria-label="Cevaplar yükleniyor" />
+  }
+  @case ('error') {
+    <p role="alert" class="error">{{ $any(state()).message }}</p>
+  }
+}
+
+@if (page(); as result) {
+  <p class="total" aria-live="polite">{{ result.total }} cevap</p>
+  <table mat-table [dataSource]="result.items" multiTemplateDataRows class="submissions">
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef>#</th>
+      <td mat-cell *matCellDef="let row">{{ row.id }}</td>
+    </ng-container>
+    <ng-container matColumnDef="form">
+      <th mat-header-cell *matHeaderCellDef>Form</th>
+      <td mat-cell *matCellDef="let row">{{ row.formId }} <span class="muted">v{{ row.version }}</span></td>
+    </ng-container>
+    <ng-container matColumnDef="submittedAt">
+      <th mat-header-cell *matHeaderCellDef>Tarih</th>
+      <td mat-cell *matCellDef="let row">{{ formatTime(row.submittedAt) }}</td>
+    </ng-container>
+    <ng-container matColumnDef="summary">
+      <th mat-header-cell *matHeaderCellDef>Özet</th>
+      <td mat-cell *matCellDef="let row" class="summary">{{ summary(row) }}</td>
+    </ng-container>
+    <ng-container matColumnDef="expand">
+      <th mat-header-cell *matHeaderCellDef><span class="visually-hidden">Detay</span></th>
+      <td mat-cell *matCellDef="let row">
+        <button
+          mat-icon-button
+          type="button"
+          (click)="toggle(row)"
+          [attr.aria-expanded]="expanded() === row.id"
+          [attr.aria-label]="'Cevap ' + row.id + ' detayı'"
+        >
+          <mat-icon aria-hidden="true">{{ expanded() === row.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="detail">
+      <td mat-cell *matCellDef="let row" [attr.colspan]="columns.length">
+        @if (expanded() === row.id) {
+          <pre class="detail">{{ row.answers | json }}</pre>
+        }
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['detail']" class="detail-row"></tr>
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell empty" [attr.colspan]="columns.length">Bu filtreyle eşleşen cevap yok.</td>
+    </tr>
+  </table>
+  <mat-paginator
+    [length]="result.total"
+    [pageIndex]="result.page"
+    [pageSize]="result.size"
+    [pageSizeOptions]="[10, 25, 50]"
+    (page)="changePage($event)"
+    aria-label="Sayfa seçimi"
+  />
+}
