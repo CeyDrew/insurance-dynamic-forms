@@ -1,0 +1,117 @@
+@let def = definition();
+@let ro = readOnly();
+
+<ng-template #card let-field let-isChild="isChild" let-index="index" let-count="count">
+  <div
+    class="field-card"
+    cdkDrag
+    [cdkDragData]="{ kind: 'move', id: field.id }"
+    [cdkDragDisabled]="ro"
+    [class.selected]="selectedId() === field.id"
+    [class.has-errors]="errorCount(field.id) > 0"
+    role="button"
+    tabindex="0"
+    [attr.aria-pressed]="selectedId() === field.id"
+    [attr.aria-label]="field.label + ', ' + labels[field.type]"
+    (click)="selectField(field, $event)"
+    (keydown.enter)="selectField(field, $event)"
+    (keydown.space)="selectField(field, $event)"
+  >
+    <div class="card-row">
+      <mat-icon class="handle" cdkDragHandle aria-hidden="true">drag_indicator</mat-icon>
+      <mat-icon class="type-icon" aria-hidden="true">{{ icons[field.type] }}</mat-icon>
+      <div class="card-text">
+        <span class="card-label">{{ field.label }}</span>
+        <span class="card-meta">{{ field.id }} · {{ labels[field.type] }}</span>
+        @if (badges(field).length > 0) {
+          <span class="badges">
+            @for (badge of badges(field); track badge) {
+              <span class="badge">{{ badge }}</span>
+            }
+          </span>
+        }
+      </div>
+      @if (errorCount(field.id) > 0) {
+        <span class="error-count" [matTooltip]="errorCount(field.id) + ' sorun'">
+          <mat-icon aria-hidden="true">error</mat-icon>{{ errorCount(field.id) }}
+          <span class="visually-hidden">sorun</span>
+        </span>
+      }
+      @if (!ro) {
+        <button mat-icon-button type="button" class="small" [disabled]="index === 0"
+          (click)="shift(field, -1, $event)" [attr.aria-label]="field.label + ' yukarı taşı'">
+          <mat-icon aria-hidden="true">keyboard_arrow_up</mat-icon>
+        </button>
+        <button mat-icon-button type="button" class="small" [disabled]="index === count - 1"
+          (click)="shift(field, 1, $event)" [attr.aria-label]="field.label + ' aşağı taşı'">
+          <mat-icon aria-hidden="true">keyboard_arrow_down</mat-icon>
+        </button>
+      }
+    </div>
+
+    @if (field.type === 'repeater' && !isChild) {
+      <div
+        class="field-list nested"
+        cdkDropList
+        [cdkDropListData]="{ stepIndex: locationStep(field.id), repeaterId: field.id }"
+        [cdkDropListEnterPredicate]="notARepeater"
+        [cdkDropListDisabled]="ro"
+        (cdkDropListDropped)="drop($event)"
+        [attr.aria-label]="field.label + ' satır alanları'"
+      >
+        @for (child of field.fields; track child.id; let i = $index) {
+          <ng-container
+            *ngTemplateOutlet="card; context: { $implicit: child, isChild: true, index: i, count: field.fields.length }"
+          />
+        } @empty {
+          <p class="empty">Satır alanlarını buraya sürükleyin</p>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
+
+@for (step of def.steps; track step.id; let s = $index) {
+  <section class="step" [class.selected]="selectedId() === step.id" [attr.aria-labelledby]="'step-title-' + step.id">
+    <header
+      class="step-header"
+      role="button"
+      tabindex="0"
+      [attr.aria-pressed]="selectedId() === step.id"
+      (click)="selectStep(step.id)"
+      (keydown.enter)="selectStep(step.id)"
+    >
+      <span class="step-number">{{ s + 1 }}</span>
+      <h3 [id]="'step-title-' + step.id">{{ step.title }}</h3>
+      @if (step.visibleWhen) {
+        <span class="badge">koşullu</span>
+      }
+      @if (errorCount(step.id) > 0) {
+        <span class="error-count"><mat-icon aria-hidden="true">error</mat-icon>{{ errorCount(step.id) }}</span>
+      }
+    </header>
+    <div
+      class="field-list"
+      cdkDropList
+      [cdkDropListData]="{ stepIndex: s }"
+      [cdkDropListDisabled]="ro"
+      (cdkDropListDropped)="drop($event)"
+      [attr.aria-label]="step.title + ' alanları'"
+    >
+      @for (field of step.fields; track field.id; let i = $index) {
+        <ng-container
+          *ngTemplateOutlet="card; context: { $implicit: field, isChild: false, index: i, count: step.fields.length }"
+        />
+      } @empty {
+        <p class="empty">Alanları soldan buraya sürükleyin veya tıklayarak ekleyin</p>
+      }
+    </div>
+  </section>
+}
+
+@if (!ro) {
+  <button mat-stroked-button type="button" class="add-step" (click)="addStep()">
+    <mat-icon aria-hidden="true">add</mat-icon>
+    Adım ekle
+  </button>
+}
