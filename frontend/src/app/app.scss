@@ -1,0 +1,28 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-toolbar {
+  gap: 12px;
+  flex: 0 0 auto;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.app-title {
+  font-weight: 500;
+}
+
+.app-container {
+  flex: 1 1 auto;
+}
+
+.app-sidenav {
+  width: 240px;
+}
+
+.app-content {
+  padding: 24px;
+}

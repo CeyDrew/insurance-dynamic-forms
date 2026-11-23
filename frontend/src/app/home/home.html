@@ -1,0 +1,26 @@
+<h1>Sigorta Dinamik Form Motoru</h1>
+<p>
+  Ürün risk formlarını (kasko, konut, sağlık, seyahat) kod yazmadan JSON tanımından üreten form
+  motoru.
+</p>
+
+<mat-card appearance="outlined" class="status-card">
+  <mat-card-header>
+    <mat-card-title>Sistem durumu</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="status" role="status" [attr.data-status]="backendStatus()">
+      @switch (backendStatus()) {
+        @case ('up') {
+          <mat-icon aria-hidden="true">check_circle</mat-icon> Backend ve veritabanı çalışıyor
+        }
+        @case ('down') {
+          <mat-icon aria-hidden="true">error</mat-icon> Backend'e ulaşılamıyor
+        }
+        @default {
+          <mat-icon aria-hidden="true">hourglass_empty</mat-icon> Kontrol ediliyor…
+        }
+      }
+    </p>
+  </mat-card-content>
+</mat-card>
