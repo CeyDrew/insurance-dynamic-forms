@@ -1,0 +1,18 @@
+.status-card {
+  max-width: 480px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+
+  &[data-status='up'] mat-icon {
+    color: var(--mat-sys-primary);
+  }
+
+  &[data-status='down'] mat-icon {
+    color: var(--mat-sys-error);
+  }
+}
