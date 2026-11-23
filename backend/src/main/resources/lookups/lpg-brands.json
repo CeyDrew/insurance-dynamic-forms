@@ -1,0 +1,10 @@
+[
+  { "value": "atiker", "label": "Atiker" },
+  { "value": "brc", "label": "BRC" },
+  { "value": "landi-renzo", "label": "Landi Renzo" },
+  { "value": "lovato", "label": "Lovato" },
+  { "value": "prins", "label": "Prins" },
+  { "value": "romano", "label": "Romano" },
+  { "value": "tomasetto", "label": "Tomasetto" },
+  { "value": "other", "label": "Diğer" }
+]
