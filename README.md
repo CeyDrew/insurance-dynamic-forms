@@ -144,6 +144,7 @@ cd frontend && npm ci && npm start          # http://localhost:4300 (/api backen
 | `cd backend && ./mvnw verify` | Backend testleri (Oracle'ı Testcontainers açar) |
 | `cd frontend && npm test` | Frontend unit testleri (Vitest) |
 | `cd frontend && npx playwright test` | E2E; çalışan bir yığına karşı (`E2E_BASE_URL`, varsayılan :4300) |
+| `cd frontend && SCREENSHOTS=1 npx playwright test screenshots` | README ekran görüntülerini yeniden üretir |
 
 Repo düzeni:
 
