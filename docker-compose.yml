@@ -1,5 +1,7 @@
 name: insurance-dynamic-forms
 
+# Everything:            docker compose up --build    -> http://localhost:4300
+# Only the database (dev): docker compose up -d oracle  (backend and frontend then run from source)
 services:
   oracle:
     image: gvenzl/oracle-free:23-slim-faststart
@@ -18,6 +20,43 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: forms-backend
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      ORACLE_HOST: oracle
+      ORACLE_PORT: "1521"
+      ORACLE_SERVICE: FREEPDB1
+      APP_DB_USER: ${APP_DB_USER:-forms}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD in .env}
+    ports:
+      - "8081:8081"
+    healthcheck:
+      # No curl in the JRE image: ask /actuator/health over bash's /dev/tcp.
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c 'exec 3<>/dev/tcp/127.0.0.1/8081 &&
+          printf "GET /actuator/health HTTP/1.0\r\n\r\n" >&3 && grep -q UP <&3'
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  frontend:
+    build: ./frontend
+    container_name: forms-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "4300:80"
 
 volumes:
   oracle-data:
