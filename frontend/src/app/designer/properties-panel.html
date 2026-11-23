@@ -1,0 +1,326 @@
+@let def = definition();
+@let ro = readOnly();
+
+@if (field(); as f) {
+  <header class="panel-header">
+    <h2>{{ labels[f.type] }}</h2>
+    <span class="type">{{ f.type }}</span>
+  </header>
+
+  @for (error of errorsOf(f.id); track error.path + error.code) {
+    <p class="problem" role="alert">{{ error.message }}</p>
+  }
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Id</mat-label>
+    <input
+      #idBox
+      matInput
+      [value]="f.id"
+      [readonly]="ro"
+      (change)="rename(idBox)"
+      (keydown.enter)="rename(idBox)"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <mat-hint>{{ idProblem(idBox.value) ?? 'Kurallarda bu adla geçer; değişince kurallar da güncellenir' }}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Etiket</mat-label>
+    <input matInput [value]="f.label" [readonly]="ro" (input)="set('label', $any($event.target).value)" />
+  </mat-form-field>
+
+  @if (keys().has('hint')) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Yardım metni</mat-label>
+      <input matInput [value]="f.hint ?? ''" [readonly]="ro" (input)="set('hint', $any($event.target).value)" />
+    </mat-form-field>
+  }
+
+  @if (isInput() && f.type !== 'boolean' && f.type !== 'radio' && f.type !== 'repeater') {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Yer tutucu</mat-label>
+      <input
+        matInput
+        [value]="f.placeholder ?? ''"
+        [readonly]="ro"
+        (input)="set('placeholder', $any($event.target).value)"
+      />
+    </mat-form-field>
+  }
+
+  @if (isInput()) {
+    <mat-slide-toggle
+      [checked]="!!get(f, 'required')"
+      [disabled]="ro || !!get(f, 'requiredWhen')"
+      (change)="set('required', $event.checked || undefined)"
+    >
+      Zorunlu
+    </mat-slide-toggle>
+    @if (get(f, 'requiredWhen')) {
+      <p class="note">Koşullu zorunlu olduğu için sabit zorunluluk kapalı.</p>
+    }
+  }
+
+  <!-- Type-specific settings -->
+  @switch (f.type) {
+    @case ('textarea') {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Satır sayısı</mat-label>
+        <input matInput type="number" min="1" max="30" [value]="get(f, 'rows') ?? ''" [readonly]="ro"
+          (input)="setNumber('rows', $any($event.target).value)" />
+      </mat-form-field>
+    }
+    @case ('number') {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Ondalık basamak</mat-label>
+        <input matInput type="number" min="0" max="10" [value]="get(f, 'decimals') ?? ''" [readonly]="ro"
+          (input)="setNumber('decimals', $any($event.target).value)" />
+      </mat-form-field>
+    }
+    @case ('currency') {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Para birimi</mat-label>
+        <mat-select [value]="get(f, 'currency') ?? 'TRY'" [disabled]="ro" (selectionChange)="set('currency', $event.value)">
+          <mat-option value="TRY">TRY</mat-option>
+          <mat-option value="EUR">EUR</mat-option>
+          <mat-option value="USD">USD</mat-option>
+          <mat-option value="GBP">GBP</mat-option>
+        </mat-select>
+      </mat-form-field>
+    }
+    @case ('repeater') {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Satır adı</mat-label>
+        <input matInput [value]="get(f, 'itemLabel') ?? ''" [readonly]="ro"
+          (input)="set('itemLabel', $any($event.target).value)" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Ekle düğmesi</mat-label>
+        <input matInput [value]="get(f, 'addLabel') ?? ''" [readonly]="ro"
+          (input)="set('addLabel', $any($event.target).value)" />
+      </mat-form-field>
+      <p class="note">Satır alanlarını paletten grubun içine sürükleyin.</p>
+    }
+    @case ('computed') {
+      <app-expression-editor
+        label="Hesaplama ifadesi"
+        hint="Örn. currentYear() - modelYear"
+        [value]="get(f, 'expression')"
+        [names]="computedNames()"
+        [readonly]="ro"
+        (valueChange)="set('expression', $event)"
+      />
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Gösterim</mat-label>
+        <mat-select [value]="get(f, 'format') ?? ''" [disabled]="ro" (selectionChange)="set('format', $event.value)">
+          <mat-option value="">Otomatik</mat-option>
+          <mat-option value="number">Sayı</mat-option>
+          <mat-option value="currency">Tutar (TRY)</mat-option>
+          <mat-option value="text">Metin</mat-option>
+        </mat-select>
+      </mat-form-field>
+    }
+    @case ('info') {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>İçerik</mat-label>
+        <textarea matInput rows="3" [value]="get(f, 'content') ?? ''" [readonly]="ro"
+          (input)="set('content', $any($event.target).value)"></textarea>
+      </mat-form-field>
+    }
+  }
+
+  <!-- Options -->
+  @if (keys().has('options')) {
+    <section class="group" aria-labelledby="options-title">
+      <h3 id="options-title">Seçenekler</h3>
+      @if (keys().has('optionsSource')) {
+        <mat-slide-toggle [checked]="!!remoteUrl()" [disabled]="ro" (change)="useRemote($event.checked)">
+          Seçenekleri sunucudan al
+        </mat-slide-toggle>
+      }
+      @if (remoteUrl() !== undefined) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Kaynak adresi</mat-label>
+          <input matInput [value]="remoteUrl()" [readonly]="ro" (input)="setRemoteUrl($any($event.target).value)"
+            placeholder="/api/lookups/cities" />
+          <mat-hint>Örn. /api/lookups/cities, /api/lookups/vehicle-brands</mat-hint>
+        </mat-form-field>
+      } @else {
+        @for (option of options(); track $index; let i = $index) {
+          <div class="row">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Değer</mat-label>
+              <input matInput [value]="option.value" [readonly]="ro" (input)="setOption(i, 'value', $any($event.target).value)" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Etiket</mat-label>
+              <input matInput [value]="option.label" [readonly]="ro" (input)="setOption(i, 'label', $any($event.target).value)" />
+            </mat-form-field>
+            <button mat-icon-button type="button" [disabled]="ro" (click)="removeOption(i)"
+              [attr.aria-label]="'Seçenek ' + (i + 1) + ' sil'">
+              <mat-icon aria-hidden="true">close</mat-icon>
+            </button>
+          </div>
+        }
+        <button mat-stroked-button type="button" [disabled]="ro" (click)="addOption()">
+          <mat-icon aria-hidden="true">add</mat-icon>
+          Seçenek ekle
+        </button>
+      }
+    </section>
+  }
+
+  <!-- Validators -->
+  @if (allowedValidators().length > 0) {
+    <section class="group" aria-labelledby="validators-title">
+      <h3 id="validators-title">Doğrulama</h3>
+      @for (validator of validators(); track validator.type; let i = $index) {
+        <div class="validator">
+          <div class="row">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ validatorLabels[validator.type] }}</mat-label>
+              <input matInput [type]="isTextValidator(validator.type) ? 'text' : 'number'" [value]="validator.value"
+                [readonly]="ro" (input)="setValidator(i, 'value', $any($event.target).value)" />
+            </mat-form-field>
+            <button mat-icon-button type="button" [disabled]="ro" (click)="removeValidator(i)"
+              [attr.aria-label]="validatorLabels[validator.type] + ' kuralını sil'">
+              <mat-icon aria-hidden="true">close</mat-icon>
+            </button>
+          </div>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Hata mesajı (isteğe bağlı)</mat-label>
+            <input matInput [value]="validator.message ?? ''" [readonly]="ro"
+              (input)="setValidator(i, 'message', $any($event.target).value)" />
+          </mat-form-field>
+        </div>
+      }
+      @if (unusedValidators().length > 0 && !ro) {
+        <button mat-stroked-button type="button" [matMenuTriggerFor]="validatorMenu">
+          <mat-icon aria-hidden="true">add</mat-icon>
+          Kural ekle
+        </button>
+        <mat-menu #validatorMenu="matMenu">
+          @for (type of unusedValidators(); track type) {
+            <button mat-menu-item type="button" (click)="addValidator(type)">{{ validatorLabels[type] }}</button>
+          }
+        </mat-menu>
+      }
+    </section>
+  }
+
+  <!-- Rules -->
+  <section class="group" aria-labelledby="rules-title">
+    <h3 id="rules-title">Koşullar</h3>
+    <app-expression-editor
+      label="Görünür olsun, eğer"
+      [value]="f.visibleWhen"
+      [names]="fieldNames()"
+      [readonly]="ro"
+      (valueChange)="set('visibleWhen', $event)"
+    />
+    @if (isInput()) {
+      <app-expression-editor
+        label="Zorunlu olsun, eğer"
+        hint="Örn. hasLpg == true"
+        [value]="get(f, 'requiredWhen')"
+        [names]="fieldNames()"
+        [readonly]="ro || !!get(f, 'required')"
+        (valueChange)="set('requiredWhen', $event)"
+      />
+      <app-expression-editor
+        label="Salt okunur olsun, eğer"
+        hint="Örn. usageType == 'taxi'"
+        [value]="get(f, 'disabledWhen')"
+        [names]="fieldNames()"
+        [readonly]="ro"
+        (valueChange)="set('disabledWhen', $event)"
+      />
+    }
+  </section>
+
+  @if (!location()?.repeaterId) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Adım</mat-label>
+      <mat-select [value]="location()?.stepIndex" [disabled]="ro" (selectionChange)="moveToStep($event.value)">
+        @for (step of def.steps; track step.id; let i = $index) {
+          <mat-option [value]="i">{{ step.title }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <button mat-stroked-button type="button" class="danger" [disabled]="ro" (click)="deleteField()">
+    <mat-icon aria-hidden="true">delete</mat-icon>
+    Alanı sil
+  </button>
+} @else if (step(); as s) {
+  <header class="panel-header">
+    <h2>Adım</h2>
+  </header>
+  @for (error of errorsOf(s.id); track error.path + error.code) {
+    <p class="problem" role="alert">{{ error.message }}</p>
+  }
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Id</mat-label>
+    <input #stepId matInput [value]="s.id" [readonly]="ro" (change)="renameStep(stepId)"
+      (keydown.enter)="renameStep(stepId)" autocomplete="off" spellcheck="false" />
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Başlık</mat-label>
+    <input matInput [value]="s.title" [readonly]="ro" (input)="setStep('title', $any($event.target).value)" />
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Açıklama</mat-label>
+    <textarea matInput rows="2" [value]="s.description ?? ''" [readonly]="ro"
+      (input)="setStep('description', $any($event.target).value)"></textarea>
+  </mat-form-field>
+  <app-expression-editor
+    label="Adım görünür olsun, eğer"
+    hint="Örn. hadSurgery == true (başka adımdaki alanlar)"
+    [value]="s.visibleWhen"
+    [names]="stepNames()"
+    [readonly]="ro"
+    (valueChange)="setStep('visibleWhen', $event)"
+  />
+  <div class="actions">
+    <button mat-stroked-button type="button" [disabled]="ro || stepIndex() === 0" (click)="moveStepBy(-1)">
+      <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+      Öne al
+    </button>
+    <button mat-stroked-button type="button" [disabled]="ro || stepIndex() === def.steps.length - 1"
+      (click)="moveStepBy(1)">
+      <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+      Sona al
+    </button>
+  </div>
+  <button mat-stroked-button type="button" class="danger" [disabled]="ro || def.steps.length === 1"
+    (click)="deleteStep()">
+    <mat-icon aria-hidden="true">delete</mat-icon>
+    Adımı sil
+  </button>
+} @else {
+  <header class="panel-header">
+    <h2>Form</h2>
+  </header>
+  @for (error of errorsOf(''); track error.path + error.code) {
+    <p class="problem" role="alert">{{ error.path }}: {{ error.message }}</p>
+  }
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Form id</mat-label>
+    <input #formId matInput [value]="def.id" [readonly]="ro || store.server().status !== 'NEW'"
+      (input)="setForm('id', formId.value)" autocomplete="off" spellcheck="false" />
+    <mat-hint>{{ formIdProblem(formId.value) ?? (store.server().status === 'NEW' ? 'Kayıttan sonra değiştirilemez' : 'Değiştirilemez') }}</mat-hint>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Başlık</mat-label>
+    <input matInput [value]="def.title" [readonly]="ro" (input)="setForm('title', $any($event.target).value)" />
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Açıklama</mat-label>
+    <textarea matInput rows="3" [value]="def.description ?? ''" [readonly]="ro"
+      (input)="setForm('description', $any($event.target).value)"></textarea>
+  </mat-form-field>
+  <p class="note">Bir adıma veya alana tıklayarak özelliklerini düzenleyin.</p>
+}

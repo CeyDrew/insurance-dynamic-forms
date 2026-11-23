@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { FormDefinition } from '../engine/model';
+import { DefinitionValidationReport, FormDefinition } from '../engine/model';
 import { FieldError, FormSubmission, FormValues } from '../engine/renderer';
 
 export interface FormSummary {
@@ -11,6 +11,16 @@ export interface FormSummary {
   publishedVersion: number | null;
   draftVersion: number | null;
   updatedAt: string;
+}
+
+export interface VersionInfo {
+  formKey: string;
+  version: number;
+  title: string;
+  status: 'DRAFT' | 'PUBLISHED';
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
 }
 
 export interface Submitted {
@@ -73,6 +83,42 @@ export class FormsApi {
   /** The latest published version of a form. */
   publishedDefinition(formKey: string): Observable<FormDefinition> {
     return this.http.get<FormDefinition>(`/api/definitions/${encodeURIComponent(formKey)}`);
+  }
+
+  versions(formKey: string): Observable<VersionInfo[]> {
+    return this.http.get<VersionInfo[]>(`/api/definitions/${encodeURIComponent(formKey)}/versions`);
+  }
+
+  definitionVersion(formKey: string, version: number): Observable<FormDefinition> {
+    return this.http.get<FormDefinition>(`/api/definitions/${encodeURIComponent(formKey)}/versions/${version}`);
+  }
+
+  /** A new form, or the next version of an existing one, saved as a draft. */
+  createDefinition(definition: FormDefinition): Observable<VersionInfo> {
+    return this.http.post<VersionInfo>('/api/definitions', definition);
+  }
+
+  updateDefinition(formKey: string, version: number, definition: FormDefinition): Observable<VersionInfo> {
+    return this.http.put<VersionInfo>(
+      `/api/definitions/${encodeURIComponent(formKey)}/versions/${version}`,
+      definition,
+    );
+  }
+
+  publish(formKey: string, version: number): Observable<VersionInfo> {
+    return this.http.post<VersionInfo>(
+      `/api/definitions/${encodeURIComponent(formKey)}/versions/${version}/publish`,
+      null,
+    );
+  }
+
+  /** A new draft copied from the latest published version. */
+  createDraft(formKey: string): Observable<VersionInfo> {
+    return this.http.post<VersionInfo>(`/api/definitions/${encodeURIComponent(formKey)}/drafts`, null);
+  }
+
+  validate(definition: FormDefinition): Observable<DefinitionValidationReport> {
+    return this.http.post<DefinitionValidationReport>('/api/definitions/validate', definition);
   }
 
   submit(submission: FormSubmission): Observable<Submitted> {

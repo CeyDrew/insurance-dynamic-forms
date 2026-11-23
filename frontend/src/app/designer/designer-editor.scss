@@ -1,0 +1,130 @@
+:host {
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 200px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+  }
+}
+
+.status {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.errors-toggle.has-errors {
+  color: var(--mat-sys-error);
+}
+
+.banner {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container);
+
+  &.error {
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+}
+
+.error-list {
+  max-height: 200px;
+  overflow: auto;
+  margin: 0 0 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  list-style: none;
+
+  button {
+    width: 100%;
+    padding: 4px 8px;
+    border: 0;
+    background: none;
+    color: var(--mat-sys-on-error-container);
+    font: var(--mat-sys-body-small);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
+  code {
+    margin-right: 6px;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 190px minmax(320px, 1fr) 340px;
+  gap: 16px;
+  padding-top: 16px;
+  align-items: start;
+}
+
+.palette-column,
+.properties-column {
+  position: sticky;
+  top: 8px;
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+}
+
+.properties-column {
+  padding: 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+}
+
+.canvas-column {
+  min-height: 400px;
+}
+
+.preview,
+.json {
+  padding-top: 16px;
+}
+
+.json pre {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container);
+  font-size: 13px;
+  overflow: auto;
+}
+
+.note {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .palette-column,
+  .properties-column {
+    position: static;
+    max-height: none;
+  }
+}

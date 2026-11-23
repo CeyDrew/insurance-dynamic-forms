@@ -1,0 +1,110 @@
+@let server = store.server();
+@let errors = store.errors();
+
+<header class="toolbar">
+  <a mat-icon-button routerLink="/designer" aria-label="Formlara dön">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+  </a>
+  <div class="title">
+    <h1>{{ store.definition().title || 'Adsız form' }}</h1>
+    <span class="status" aria-live="polite">{{ status() }}</span>
+  </div>
+
+  <button mat-icon-button type="button" [disabled]="!store.canUndo() || store.readOnly()" (click)="store.undo()"
+    matTooltip="Geri al (Ctrl+Z)" aria-label="Geri al">
+    <mat-icon aria-hidden="true">undo</mat-icon>
+  </button>
+  <button mat-icon-button type="button" [disabled]="!store.canRedo() || store.readOnly()" (click)="store.redo()"
+    matTooltip="Yinele (Ctrl+Y)" aria-label="Yinele">
+    <mat-icon aria-hidden="true">redo</mat-icon>
+  </button>
+
+  <button mat-stroked-button type="button" class="errors-toggle" [class.has-errors]="errors.length > 0"
+    (click)="showErrors.set(!showErrors())" [attr.aria-expanded]="showErrors()" aria-controls="error-list">
+    <mat-icon aria-hidden="true">{{ errors.length > 0 ? 'error' : 'check_circle' }}</mat-icon>
+    {{ errors.length > 0 ? errors.length + ' sorun' : 'Geçerli' }}
+  </button>
+
+  @if (server.status === 'PUBLISHED') {
+    <a mat-stroked-button [routerLink]="['/fill', server.formKey]">
+      <mat-icon aria-hidden="true">edit_note</mat-icon>
+      Doldur
+    </a>
+    <button mat-flat-button type="button" [disabled]="store.saving()" (click)="newDraft()">
+      <mat-icon aria-hidden="true">content_copy</mat-icon>
+      Yeni versiyon taslağı
+    </button>
+  } @else {
+    <button mat-stroked-button type="button" [disabled]="store.saving() || (!store.dirty() && server.status !== 'NEW')"
+      (click)="save()">
+      <mat-icon aria-hidden="true">save</mat-icon>
+      Kaydet
+    </button>
+    <button mat-flat-button type="button" [disabled]="store.saving() || errors.length > 0" (click)="publish()"
+      [matTooltip]="errors.length > 0 ? 'Önce sorunları giderin' : 'Bu versiyonu dondurur ve doldurulabilir yapar'">
+      <mat-icon aria-hidden="true">publish</mat-icon>
+      Yayınla
+    </button>
+  }
+</header>
+
+@if (store.saving() || loading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="İşleniyor" />
+}
+@if (store.saveError() || loadError(); as message) {
+  <p class="banner error" role="alert">{{ message }}</p>
+}
+@if (showErrors() && errors.length > 0) {
+  <ul class="error-list" id="error-list">
+    @for (error of errors; track error.path + error.code) {
+      <li>
+        <button type="button" (click)="selectError(error.path)">
+          <code>{{ error.path || 'form' }}</code> {{ error.message }}
+        </button>
+      </li>
+    }
+  </ul>
+}
+
+<mat-tab-group animationDuration="0ms" class="tabs" mat-stretch-tabs="false">
+  <mat-tab label="Tasarım">
+    <div class="layout" cdkDropListGroup>
+      <aside class="palette-column">
+        <app-palette />
+      </aside>
+      <main class="canvas-column" (click)="store.select({ kind: 'form' })">
+        <app-designer-canvas />
+      </main>
+      <aside class="properties-column" aria-label="Özellikler">
+        <app-properties-panel />
+      </aside>
+    </div>
+  </mat-tab>
+
+  <mat-tab label="Önizleme">
+    <ng-template matTabContent>
+      <div class="preview">
+        @if (previewProblem(); as problem) {
+          <p class="banner">{{ problem }}</p>
+        } @else {
+          @for (definition of [store.definition()]; track definition) {
+            <dyn-form-renderer [definition]="definition" />
+          }
+          <p class="note">Önizleme gerçek renderer'dır; gönderim yapılmaz.</p>
+        }
+      </div>
+    </ng-template>
+  </mat-tab>
+
+  <mat-tab label="JSON">
+    <ng-template matTabContent>
+      <div class="json">
+        <button mat-stroked-button type="button" (click)="copyJson()">
+          <mat-icon aria-hidden="true">{{ copied() ? 'done' : 'content_copy' }}</mat-icon>
+          {{ copied() ? 'Kopyalandı' : 'Kopyala' }}
+        </button>
+        <pre>{{ store.definition() | json }}</pre>
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

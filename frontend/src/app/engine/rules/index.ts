@@ -5,4 +5,6 @@ export * from './expression-error';
 export * from './form-rules';
 export { FUNCTIONS, isFunctionName } from './functions';
 export type { FunctionName } from './functions';
+export { tokenize } from './tokenizer';
+export type { Token } from './tokenizer';
 export * from './value';

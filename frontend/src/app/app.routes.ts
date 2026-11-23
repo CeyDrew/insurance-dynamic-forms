@@ -8,6 +8,16 @@ export const routes: Routes = [
     title: 'Form Tasarımcısı',
   },
   {
+    path: 'designer/new',
+    loadComponent: () => import('./designer/designer-editor').then((m) => m.DesignerEditorPage),
+    title: 'Yeni Form',
+  },
+  {
+    path: 'designer/:formKey/:version',
+    loadComponent: () => import('./designer/designer-editor').then((m) => m.DesignerEditorPage),
+    title: 'Form Tasarımcısı',
+  },
+  {
     path: 'fill',
     loadComponent: () => import('./fill/fill-page').then((m) => m.FillPage),
     title: 'Form Doldur',
