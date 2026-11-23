@@ -1,0 +1,134 @@
+{
+  "id": "travel-risk",
+  "version": 1,
+  "title": "Seyahat Sağlık Sigortası Formu",
+  "description": "Vize başvurusu için en az 30.000 EUR teminatlı poliçe gerekir.",
+  "steps": [
+    {
+      "id": "trip",
+      "title": "Seyahat",
+      "fields": [
+        {
+          "id": "region",
+          "type": "select",
+          "label": "Bölge",
+          "required": true,
+          "options": [
+            { "value": "schengen", "label": "Schengen Ülkeleri" },
+            { "value": "europe", "label": "Tüm Avrupa" },
+            { "value": "worldwideExUs", "label": "Tüm Dünya (ABD/Kanada hariç)" },
+            { "value": "worldwide", "label": "Tüm Dünya" }
+          ]
+        },
+        {
+          "id": "countries",
+          "type": "multiselect",
+          "label": "Gidilecek Ülkeler",
+          "required": true,
+          "optionsSource": { "type": "remote", "url": "/api/lookups/countries" },
+          "validators": [{ "type": "maxItems", "value": 15 }]
+        },
+        {
+          "id": "purpose",
+          "type": "radio",
+          "label": "Seyahat Amacı",
+          "required": true,
+          "options": [
+            { "value": "tourism", "label": "Turistik" },
+            { "value": "business", "label": "İş" },
+            { "value": "education", "label": "Eğitim" }
+          ]
+        },
+        { "id": "departureDate", "type": "date", "label": "Gidiş Tarihi", "required": true,
+          "validators": [{ "type": "minDate", "value": "today" }] },
+        { "id": "returnDate", "type": "date", "label": "Dönüş Tarihi", "required": true,
+          "validators": [{ "type": "minDate", "value": "today" }] },
+        {
+          "id": "tripDays",
+          "type": "computed",
+          "label": "Seyahat Süresi (gün)",
+          "expression": "daysBetween(departureDate, returnDate) + 1"
+        },
+        {
+          "id": "longTripNote",
+          "type": "info",
+          "label": "Uzun seyahat",
+          "content": "90 günü aşan seyahatlerde yıllık poliçe daha uygun olabilir.",
+          "visibleWhen": "tripDays > 90"
+        },
+        { "id": "winterSports", "type": "boolean", "label": "Kış sporu yapılacak mı?", "defaultValue": false,
+          "visibleWhen": "purpose == 'tourism'" }
+      ]
+    },
+    {
+      "id": "travelersStep",
+      "title": "Sigortalılar",
+      "fields": [
+        {
+          "id": "travelers",
+          "type": "repeater",
+          "label": "Seyahat Edenler",
+          "itemLabel": "Sigortalı",
+          "addLabel": "Kişi ekle",
+          "required": true,
+          "validators": [{ "type": "maxItems", "value": 8 }],
+          "fields": [
+            { "id": "travelerName", "type": "text", "label": "Ad Soyad (pasaporttaki gibi)", "required": true,
+              "validators": [{ "type": "pattern", "value": "^[A-Z ]+$", "message": "Büyük harf ve Latin karakter kullanın" }] },
+            { "id": "passportNo", "type": "text", "label": "Pasaport No", "required": true,
+              "validators": [{ "type": "pattern", "value": "^[A-Z][0-9]{8}$", "message": "Geçersiz pasaport numarası" }] },
+            { "id": "travelerBirthDate", "type": "date", "label": "Doğum Tarihi", "required": true,
+              "validators": [{ "type": "maxDate", "value": "today" }] },
+            { "id": "travelerAge", "type": "computed", "label": "Yaş", "expression": "age(travelerBirthDate)" },
+            {
+              "id": "seniorNote",
+              "type": "info",
+              "label": "Bilgi",
+              "content": "70 yaş üstü sigortalılarda teminat limiti düşer.",
+              "visibleWhen": "travelerAge >= 70"
+            }
+          ]
+        },
+        {
+          "id": "travelerCount",
+          "type": "computed",
+          "label": "Kişi Sayısı",
+          "expression": "count(travelers)"
+        }
+      ]
+    },
+    {
+      "id": "coverage",
+      "title": "Teminat",
+      "fields": [
+        {
+          "id": "coverageLimit",
+          "type": "select",
+          "label": "Teminat Limiti",
+          "required": true,
+          "defaultValue": "30000",
+          "options": [
+            { "value": "30000", "label": "30.000 EUR" },
+            { "value": "50000", "label": "50.000 EUR" },
+            { "value": "100000", "label": "100.000 EUR" }
+          ]
+        },
+        { "id": "cancellationCover", "type": "boolean", "label": "Seyahat iptal teminatı eklensin mi?",
+          "defaultValue": false },
+        {
+          "id": "tripCost",
+          "type": "currency",
+          "label": "Seyahat Bedeli",
+          "currency": "EUR",
+          "hint": "Uçak ve konaklama dahil toplam tutar.",
+          "visibleWhen": "cancellationCover == true",
+          "requiredWhen": "cancellationCover == true",
+          "validators": [{ "type": "min", "value": 100 }, { "type": "max", "value": 50000 }]
+        },
+        { "id": "email", "type": "text", "label": "E-posta", "required": true,
+          "hint": "Poliçe bu adrese gönderilir.",
+          "validators": [{ "type": "pattern", "value": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", "message": "Geçerli bir e-posta girin" }] }
+      ]
+    }
+  ]
+}
