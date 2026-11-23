@@ -30,6 +30,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    // The step content clips overflow; leave room for the floating label of the first outline field.
+    padding-top: 8px;
   }
 
   .dyn-field {
