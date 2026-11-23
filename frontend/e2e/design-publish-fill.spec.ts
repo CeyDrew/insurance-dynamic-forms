@@ -14,13 +14,13 @@ test('design → publish → fill → see the answer in the list', async ({ page
     await page.getByRole('textbox', { name: 'Başlık' }).fill('E2E Evcil Hayvan');
 
     await page.getByRole('button', { name: 'Evet / Hayır ekle' }).click();
-    await page.getByRole('textbox', { name: 'Etiket' }).fill('Hayvanınız köpek mi?');
-    await page.getByRole('textbox', { name: 'Id' }).fill('isDog');
-    await page.getByRole('textbox', { name: 'Id' }).press('Enter');
+    await page.getByRole('textbox', { name: 'Etiket', exact: true }).fill('Hayvanınız köpek mi?');
+    await page.getByRole('textbox', { name: 'Id', exact: true }).fill('isDog');
+    await page.getByRole('textbox', { name: 'Id', exact: true }).press('Enter');
     await page.getByRole('switch', { name: 'Zorunlu' }).click();
 
-    await page.getByRole('button', { name: 'Metin ekle' }).click();
-    await page.getByRole('textbox', { name: 'Etiket' }).fill('Köpeğinizin cinsi');
+    await page.getByRole('button', { name: 'Metin ekle', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Etiket', exact: true }).fill('Köpeğinizin cinsi');
     const rules = page.locator('app-expression-editor textarea');
     await rules.nth(0).fill('isDog == true');
     await rules.nth(1).fill('isDog == true');
@@ -42,7 +42,7 @@ test('design → publish → fill → see the answer in the list', async ({ page
   });
 
   await test.step('fill it in', async () => {
-    await page.getByRole('link', { name: 'Doldur' }).click();
+    await page.getByRole('link', { name: 'Doldur', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'E2E Evcil Hayvan' })).toBeVisible();
     const breedBox = page.getByRole('textbox', { name: 'Köpeğinizin cinsi' });
     await expect(breedBox).toHaveCount(0); // hidden until the answer is "Evet"
@@ -57,9 +57,9 @@ test('design → publish → fill → see the answer in the list', async ({ page
   });
 
   await test.step('find the answer in the submissions list', async () => {
-    await page.getByRole('link', { name: 'Gelen cevaplar' }).click();
-    await page.getByRole('textbox', { name: 'Alan' }).fill('isDog');
-    await page.getByRole('textbox', { name: 'Değer' }).fill('true');
+    await page.getByRole('link', { name: 'Gelen cevaplar', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Alan', exact: true }).fill('isDog');
+    await page.getByRole('textbox', { name: 'Değer', exact: true }).fill('true');
     await page.getByRole('button', { name: 'Filtrele' }).click();
 
     await expect(page.getByText('1 cevap')).toBeVisible();
@@ -77,6 +77,6 @@ test('the four example forms are published and open', async ({ page }) => {
   ]) {
     await expect(page.getByText(title, { exact: true })).toBeVisible();
   }
-  await page.getByRole('link', { name: 'Doldur' }).first().click();
+  await page.getByRole('link', { name: 'Doldur', exact: true }).first().click();
   await expect(page.locator('dyn-form-renderer mat-stepper')).toBeVisible();
 });
